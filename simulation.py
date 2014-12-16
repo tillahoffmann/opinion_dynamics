@@ -73,7 +73,8 @@ class PriorUpdater:
 
 def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', neighbor_selector=None):
     """
-    Simulates the evolution of the balls in the urns of each node in a network.
+    Simulates the evolution of the balls in the urns of each node in a network. IMPORTANT: The order of keyword
+    arguments is not guaranteed to remain the same. Always set keyword arguments with keyword syntax.
     :param graph: The interaction topology.
     :param alpha: The initial number of balls of type 0.
     :param beta: The initial number of balls of type 1.
