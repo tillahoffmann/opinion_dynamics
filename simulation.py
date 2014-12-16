@@ -215,7 +215,9 @@ def _main():
 
     # Define a number of nodes and simulation steps
     num_nodes = 100
-    num_steps = 10000
+    num_steps = 100000
+    np.random.seed(42)
+    concentration = 3
 
     # Create a graph
     graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
@@ -223,8 +225,8 @@ def _main():
     graph = remove_isolates(graph)
     # Obtain the number of remaining nodes and initialise the alpha and beta vectors
     num_nodes = graph.number_of_nodes()
-    alpha = np.ones(num_nodes)
-    beta = np.ones(num_nodes)
+    alpha = concentration * np.ones(num_nodes)
+    beta = concentration * np.ones(num_nodes)
 
     # Run the simulation
     alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
