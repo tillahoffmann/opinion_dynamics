@@ -2,7 +2,7 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
-
+edges = np.loadtxt('Enron.txt',skiprows=4)
 
 def remove_isolates(graph, inplace=False, relabel=True):
     """
@@ -157,6 +157,32 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
 
     return np.array(alphas), np.array(betas)
 
+def GraphType(num_nodes,str):
+    '''
+    :param num_nodes: the number of nodes of the graph (if that option is available)
+    :param str: the type of graph that is used. We have
+                'erdos'         an erdos renyi graph
+                'powerlaw'      a graph with powerlaw degree distribution
+                'enron'         a social network graph loaded from
+                                http://snap.stanford.edu/data/email-Enron.html. (36692 nodes)
+                'karateclub'    some karate club graph
+                'women'         women social network
+    :return: the graph
+    '''
+    if str == 'erdos':
+        graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
+    elif str == 'powerlaw':
+        graph = nx.powerlaw_cluster_graph(num_nodes, 3,5 / float(num_nodes))
+    elif str == 'enron':
+        graph = nx.Graph()
+        graph.add_edges_from(edges)
+    elif str == 'karateclub':
+        graph = nx.karate_club_graph()
+    elif str == 'women':
+        graph = nx.davis_southern_women_graph()
+
+    return graph
+
 def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
@@ -166,7 +192,7 @@ def _main():
     num_steps = 1000
 
     # Create a graph
-    graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
+    graph = GraphType(num_nodes,'karateclub')
     # Remove any isolated nodes and relabel the nodes
     graph = remove_isolates(graph)
     # Obtain the number of remaining nodes and initialise the alpha and beta vectors
