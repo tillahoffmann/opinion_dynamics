@@ -1,3 +1,6 @@
 Systems and Signals Group Project Dec 2014
 
-modeling mHealth interventions
+Modeling mHealth interventions
+
+Opinion Dynamics
+
