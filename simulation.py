@@ -3,6 +3,7 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
+
 def remove_isolates(graph, inplace=False, relabel=True):
     """
     Removes isolated nodes from the graph.
@@ -26,6 +27,7 @@ class NodeSelector:
     """
     A class that specifies how nodes are selected to participate in information exchange.
     """
+
     def __init__(self, method='uniform'):
         """
         Initialises a `NodeSelector` instance.
@@ -57,7 +59,12 @@ class PriorUpdater:
     """
     A class that specifies how the prior of a node is updated when it receives a ball.
     """
+
     def __init__(self, method='normal', weight=1):
+        """
+        Initialises a `PriorUpdateer` instance.
+        :param method: Currently only 'normal' is implemented.
+        """
         self.method = method
         self.weight = weight
 
@@ -70,28 +77,36 @@ class PriorUpdater:
         else:
             raise ValueError("Prior update method '{}' is invalid.".format(self.method))
 
+
 class Stationarity:
     """
     A class that specifies how the model attains a stationary distribuion.
     """
+
     def __init__(self, method='polya', weight=1):
+        """
+        Initialises a `Stationarity` instance.
+        :param method: Lets the number of balls in the system increase steadily if 'polya' and keeps the number of
+        balls constant if 'moran' (cf. Moran, Patrick Alfred Pierce (1962). The Statistical Processes of Evolutionary
+        Theory. Oxford: Clarendon Press.).
+        """
         self.method = method
         self.weight = weight
 
     def __call__(self, alpha, beta, node, ball):
         if self.method == 'polya':
-            #Nothing to do
+            # Nothing to do
             pass
         elif self.method == 'moran':
-            #Delete a random ball
+            # Compute the probability of selecting a ball of either colour...
             a = alpha[node]
             b = beta[node]
             probability = a / float(a + b)
+            # ... and delete it
             if probability < np.random.uniform():
                 beta[node] -= self.weight
             else:
                 alpha[node] -= self.weight
-
 
 
 def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', stationarity=None,
@@ -110,13 +125,13 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     """
     # Ensure there are no isolated nodes
     degree = np.asarray(graph.degree().values())
-    assert np.all(degree > 0), "The graph must not contain isolated nodes. You can remove isolated nodes by "\
-    "calling `remove_isolates`."
+    assert np.all(degree > 0), "The graph must not contain isolated nodes. You can remove isolated nodes by " \
+                               "calling `remove_isolates`."
 
     # Ensure the nodes are properly labelled
     nodes = np.asarray(graph.nodes())
-    assert np.all(nodes == np.arange(len(nodes))), "The nodes must be labelled with a zero-based index. You can "\
-    "relabel nodes by calling `remove_isolates` or `nx.convert_node_labels_to_integers`."
+    assert np.all(nodes == np.arange(len(nodes))), "The nodes must be labelled with a zero-based index. You can " \
+                                                   "relabel nodes by calling `remove_isolates` or `nx.convert_node_labels_to_integers`."
 
     # Copy the initial parameters as numpy arrays
     alpha = np.array(alpha)
@@ -124,8 +139,8 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
 
     # Ensure we have the right dimensions for the parameters
     num_nodes = graph.number_of_nodes()
-    assert num_nodes == len(alpha) and num_nodes == len(beta), "The `alpha` and `beta` vectors must have exactly "\
-    "the same number of elements as there are nodes in the network."
+    assert num_nodes == len(alpha) and num_nodes == len(beta), "The `alpha` and `beta` vectors must have exactly " \
+                                                               "the same number of elements as there are nodes in the network."
 
     # Initialise the node_selector...
     if type(node_selector) is str:
@@ -139,7 +154,7 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
 
     # Initialise the neighbor_selector
     if neighbor_selector is None:
-        #Use the same method as the node selector unless specified otherwise
+        # Use the same method as the node selector unless specified otherwise
         neighbor_selector = node_selector
     elif type(neighbor_selector) is str:
         neighbor_selector = NodeSelector(neighbor_selector)
@@ -162,7 +177,7 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     if type(stationarity) is str:
         stationarity = Stationarity(stationarity)
     elif callable(stationarity) or stationarity is None:
-        #...all good--the stationarity is callable or we aren't doing anything
+        # ...all good--the stationarity is callable or we aren't doing anything
         pass
     else:
         raise ValueError("'{}' is not a valid stationarity specification".format(stationarity))
@@ -192,6 +207,7 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
         betas.append(beta.copy())
 
     return np.array(alphas), np.array(betas)
+
 
 def _main():
     # Import plotting library
@@ -231,5 +247,6 @@ def _main():
 
     plt.show()
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     _main()
