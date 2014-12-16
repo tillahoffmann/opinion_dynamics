@@ -2,6 +2,7 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
+from scipy.special import gammaln, polygamma
 
 
 def remove_isolates(graph, inplace=False, relabel=True):
@@ -53,6 +54,47 @@ class NodeSelector:
 
         weights = np.asarray(weights) / float(np.sum(weights))
         return np.random.choice(nodes, p=weights)
+
+
+class SummaryStats:
+    """
+    A class to collect some summary metrics
+    """
+    def __init__(self, alphas, betas):
+        self.alphas = alphas
+        self.betas = betas
+        self.prob_alpha = self.alphas / (self.alphas + self.betas)
+        self.stats = {}
+
+    def collect_stats(self):
+        """Collect the statisics for one run, summarising over nodes"""
+
+        self.stats["mean_prob_alpha_per_urn"] = np.mean(self.prob_alpha, axis=1)
+        self.stats["mean_delta_prob_alpha_per_urn"] \
+            = self._mean_delta_prob_alpha_per_urn()
+
+        #ball mean_prob_alpha_for_balls
+        #ball mean_delta_prob_alpha_for_balls
+        #mean_entropy_per_urn -- Till
+
+        ## Measures of distribution of confidence: sum(alpha+beta) - 2
+        #correlation of confidence with sum(neighbours)
+        #std of sum(alpha+beta) of urns
+        #entropy of sum(alpha+beta) of urns
+        #gini distribution of sum(alpha+beta)
+        mean_entropy_per_urn = gammaln(self.alphas+1) + gammaln(self.betas+1)-gammaln(self.alphas+self.betas+2)-\
+            self.alphas * polygamma(0, self.alphas+1)- self.betas * polygamma(0, self.betas+1) +\
+            (self.alphas + self.betas) * polygamma(0, self.alphas + self.betas + 2)
+        mean_entropy_per_urn = np.mean(mean_entropy_per_urn, axis=1)
+        self.stats["mean_entropy_per_urn"] = mean_entropy_per_urn
+
+
+    def _mean_delta_prob_alpha_per_urn(self):
+        """How delta alpha changes"""
+        delta_nodes = []
+        for node in np.rollaxis(self.prob_alpha, 1):
+            delta_nodes.append(np.ediff1d(node))
+        return np.mean(np.array(delta_nodes), axis=0)
 
 
 class PriorUpdater:
@@ -225,15 +267,20 @@ def _main():
     graph = remove_isolates(graph)
     # Obtain the number of remaining nodes and initialise the alpha and beta vectors
     num_nodes = graph.number_of_nodes()
+
     alpha = concentration * np.ones(num_nodes)
     beta = concentration * np.ones(num_nodes)
 
     # Run the simulation
     alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
 
+    summary_stats = SummaryStats(alphas, betas)
+    summary_stats.collect_stats()
+
     # Compute the fraction of `alpha` balls in the population and visualise
-    probability = np.mean(alphas / (alphas + betas), axis=1)
+    probability = summary_stats.stats["mean_prob_alpha_per_urn"]
     plt.figure()
+
     plt.plot(probability)
     plt.xlabel('Step number')
     plt.ylabel('Population probability')
