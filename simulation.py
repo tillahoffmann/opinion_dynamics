@@ -61,25 +61,42 @@ class SummaryStats:
     """
     A class to collect some summary metrics
     """
-    def __init__(self, alphas, betas):
+    def __init__(self, alphas, betas, graph):
         self.alphas = alphas
         self.betas = betas
-        self.prob_alpha = self.alphas / (self.alphas + self.betas)
+
+        self.beliefs = self.alphas / (self.alphas + self.betas)
         self.stats = {}
+        self.confidences = self.alphas + self.betas - 2
+
+        self.degrees = nx.degree(graph)
 
     def collect_stats(self):
         """Collect the statisics for one run, summarising over nodes"""
 
-        self.stats["mean_prob_alpha_per_urn"] = np.mean(self.prob_alpha, axis=1)
-        self.stats["mean_delta_prob_alpha_per_urn"] \
-            = self._mean_delta_prob_alpha_per_urn()
+        # Measures of distribution of belief of urns
+        self.stats["mean_belief_per_urn"] = np.mean(self.beliefs, axis=1)
+        self.stats["mean_delta_belief_per_urn"] \
+            = self._mean_delta_belief_per_urn()
 
-        #ball mean_prob_alpha_for_balls
-        #ball mean_delta_prob_alpha_for_balls
-        #mean_entropy_per_urn -- Till
+        # Measures of distribution of belief across balls
+        self.stats["mean_belief_for_balls"] \
+            = self._mean_belief_for_balls()
+        self.stats["mean_delta_belief_for_balls"] \
+            = np.ediff1d(self.stats["mean_belief_for_balls"])
 
-        ## Measures of distribution of confidence: sum(alpha+beta) - 2
+        # Measures of distribution of confidence of urns
+        self.stats["mean_confidence"] = np.mean(self.confidences, axis=1)
+        #std of confidence of urns
+        self.stats["std_confidence"] = np.std(self.confidences, axis=1)
+        #entropy of confidence of urns
+        self.stats["entropy_confidence"] = self._return_entropy_of_confidence()
         #correlation of confidence with sum(neighbours)
+
+        self.stats["correlation_confidence_degree"] \
+            = self._correlation_confidence_degree()
+        #gini distribution of confidence
+
         #std of sum(alpha+beta) of urns
         #entropy of sum(alpha+beta) of urns
         #gini distribution of sum(alpha+beta)
@@ -90,12 +107,60 @@ class SummaryStats:
         self.stats["mean_entropy_per_urn"] = mean_entropy_per_urn
 
 
-    def _mean_delta_prob_alpha_per_urn(self):
+
+    def _mean_delta_belief_per_urn(self):
         """How delta alpha changes"""
         delta_nodes = []
-        for node in np.rollaxis(self.prob_alpha, 1):
+        for node in np.rollaxis(self.beliefs, 1):
             delta_nodes.append(np.ediff1d(node))
         return np.mean(np.array(delta_nodes), axis=0)
+
+    def _mean_belief_for_balls(self):
+        """How prob alpha changes per ball"""
+        alpha_mean = np.mean(self.alphas, axis=1)
+        beta_mean = np.mean(self.betas, axis=1)
+        beliefs_mean = alpha_mean / (alpha_mean + beta_mean)
+        return beliefs_mean
+
+    def _return_entropy_of_confidence(self):
+        """Returns entropy of 2D confidence array"""
+        urn_timestep_entropy_confidences = []
+        for timestep in self.confidences.astype(int):
+            urn_timestep_entropy_confidences\
+                .append(self._return_entropy(timestep))
+
+        return urn_timestep_entropy_confidences
+
+    def _correlation_confidence_degree(self):
+        """Correlation between confidence and node degree"""
+        corrcoefs = []
+        for timestep in self.confidences:
+            corr = np.corrcoef(list(timestep), self.degrees.values())[0][1]
+            corrcoefs.append(corr)
+
+        return corrcoefs
+
+    def _return_entropy(self, array):
+        """ Computes entropy of distribution, stolen from SO """
+        n_samples = len(array)
+
+        if n_samples <= 1:
+            return 0
+
+        counts = np.bincount(array)
+        probs = counts / n_samples
+        n_classes = np.count_nonzero(probs)
+
+        if n_classes <= 1:
+            return 0
+
+        ent = 0.
+
+        # Compute standard entropy.
+        for i in probs:
+            ent -= i * log(i, base=n_classes)
+
+        return ent
 
 
 class PriorUpdater:
@@ -287,7 +352,7 @@ def _main():
 
     # Define a number of nodes and simulation steps
     num_nodes = 100
-    num_steps = 100000
+    num_steps = 10000
     np.random.seed(42)
     concentration = 3
 
@@ -304,7 +369,7 @@ def _main():
     # Run the simulation
     alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
 
-    summary_stats = SummaryStats(alphas, betas)
+    summary_stats = SummaryStats(alphas, betas, graph)
     summary_stats.collect_stats()
 
     # Compute the fraction of `alpha` balls in the population and visualise
