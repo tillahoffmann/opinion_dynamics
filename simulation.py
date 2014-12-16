@@ -2,9 +2,6 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
-
-edges = np.loadtxt('Enron.txt',skiprows=4)
-
 from scipy.special import gammaln, polygamma
 
 
@@ -273,6 +270,7 @@ def GraphType(num_nodes,str):
         graph = nx.powerlaw_cluster_graph(num_nodes, 3,5 / float(num_nodes))
     elif str == 'enron':
         graph = nx.Graph()
+        edges = np.loadtxt('Enron.txt',skiprows=4)
         graph.add_edges_from(edges)
     elif str == 'karateclub':
         graph = nx.karate_club_graph()
