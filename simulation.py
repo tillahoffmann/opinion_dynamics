@@ -3,6 +3,11 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
+edges = np.loadtxt('Enron.txt',skiprows=4)
+
+from scipy.special import gammaln, polygamma
+
+
 
 def remove_isolates(graph, inplace=False, relabel=True):
     """
@@ -76,7 +81,6 @@ class SummaryStats:
         self.stats["mean_belief_per_urn"] = np.mean(self.beliefs, axis=1)
         self.stats["mean_delta_belief_per_urn"] \
             = self._mean_delta_belief_per_urn()
-        #mean_entropy_of_belief_per_urn -- Till
 
         # Measures of distribution of belief across balls
         self.stats["mean_belief_for_balls"] \
@@ -91,9 +95,21 @@ class SummaryStats:
         #entropy of confidence of urns
         self.stats["entropy_confidence"] = self._return_entropy_of_confidence()
         #correlation of confidence with sum(neighbours)
+
         self.stats["correlation_confidence_degree"] \
             = self._correlation_confidence_degree()
         #gini distribution of confidence
+
+        #std of sum(alpha+beta) of urns
+        #entropy of sum(alpha+beta) of urns
+        #gini distribution of sum(alpha+beta)
+        mean_entropy_per_urn = gammaln(self.alphas+1) + gammaln(self.betas+1)-gammaln(self.alphas+self.betas+2)-\
+            self.alphas * polygamma(0, self.alphas+1)- self.betas * polygamma(0, self.betas+1) +\
+            (self.alphas + self.betas) * polygamma(0, self.alphas + self.betas + 2)
+        mean_entropy_per_urn = np.mean(mean_entropy_per_urn, axis=1)
+        self.stats["mean_entropy_per_urn"] = mean_entropy_per_urn
+
+
 
     def _mean_delta_belief_per_urn(self):
         """How delta alpha changes"""
@@ -304,6 +320,34 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     return np.array(alphas), np.array(betas)
 
 
+def GraphType(num_nodes,str):
+    '''
+    :param num_nodes: the number of nodes of the graph (if that option is available)
+    :param str: the type of graph that is used. We have
+                'erdos'         an erdos renyi graph
+                'powerlaw'      a graph with powerlaw degree distribution
+                'enron'         a social network graph loaded from
+                                http://snap.stanford.edu/data/email-Enron.html. (36692 nodes)
+                'karateclub'    some karate club graph
+                'women'         women social network
+    :return: the graph
+    '''
+    if str == 'erdos':
+        graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
+    elif str == 'powerlaw':
+        graph = nx.powerlaw_cluster_graph(num_nodes, 3,5 / float(num_nodes))
+    elif str == 'enron':
+        graph = nx.Graph()
+        graph.add_edges_from(edges)
+    elif str == 'karateclub':
+        graph = nx.karate_club_graph()
+    elif str == 'women':
+        graph = nx.davis_southern_women_graph()
+
+    return graph
+
+
+
 def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
@@ -315,7 +359,7 @@ def _main():
     concentration = 3
 
     # Create a graph
-    graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
+    graph = GraphType(num_nodes,'karateclub')
     # Remove any isolated nodes and relabel the nodes
     graph = remove_isolates(graph)
     # Obtain the number of remaining nodes and initialise the alpha and beta vectors
