@@ -70,8 +70,32 @@ class PriorUpdater:
         else:
             raise ValueError("Prior update method '{}' is invalid.".format(self.method))
 
+class Stationarity:
+    """
+    A class that specifies how the model attains a stationary distribuion.
+    """
+    def __init__(self, method='polya', weight=1):
+        self.method = method
+        self.weight = weight
 
-def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', neighbor_selector=None):
+    def __call__(self, alpha, beta, node, ball):
+        if self.method == 'polya':
+            #Nothing to do
+            pass
+        elif self.method == 'moran':
+            #Delete a random ball
+            a = alpha[node]
+            b = beta[node]
+            probability = a / float(a + b)
+            if probability < np.random.uniform():
+                beta[node] -= self.weight
+            else:
+                alpha[node] -= self.weight
+
+
+
+def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', stationarity=None,
+             neighbor_selector=None):
     """
     Simulates the evolution of the balls in the urns of each node in a network. IMPORTANT: The order of keyword
     arguments is not guaranteed to remain the same. Always set keyword arguments with keyword syntax.
@@ -134,10 +158,19 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     else:
         raise ValueError("'{}' is not a valid prior updater.".format(neighbor_selector))
 
+    # Initialise the stationarity
+    if type(stationarity) is str:
+        stationarity = Stationarity(stationarity)
+    elif callable(stationarity) or stationarity is None:
+        #...all good--the stationarity is callable or we aren't doing anything
+        pass
+    else:
+        raise ValueError("'{}' is not a valid stationarity specification".format(stationarity))
+
     # Initialise the matrices containing the hyperparameters
     # as a function of time for each node
-    alphas = [alpha]
-    betas = [beta]
+    alphas = [alpha.copy()]
+    betas = [beta.copy()]
 
     for step in range(num_steps):
         # Select a node as the transmitter of information
@@ -150,6 +183,8 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
         # Obtain a ball from the urn
         ball = probability < np.random.uniform()
         # Update the prior of the neighbor
+        if stationarity is not None:
+            stationarity(alpha, beta, neighbor, ball)
         prior_updater(alpha, beta, neighbor, ball)
 
         # Add the results
@@ -164,7 +199,7 @@ def _main():
 
     # Define a number of nodes and simulation steps
     num_nodes = 100
-    num_steps = 1000
+    num_steps = 10000
 
     # Create a graph
     graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
@@ -176,14 +211,24 @@ def _main():
     beta = np.ones(num_nodes)
 
     # Run the simulation
-    alphas, betas = simulate(graph, alpha, beta, num_steps)
+    alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
 
     # Compute the fraction of `alpha` balls in the population and visualise
     probability = np.mean(alphas / (alphas + betas), axis=1)
+    plt.figure()
     plt.plot(probability)
     plt.xlabel('Step number')
     plt.ylabel('Population probability')
     plt.tight_layout()
+
+    # Plot the number of blue and red balls as a function of time
+    plt.figure()
+    plt.plot(np.sum(alphas, axis=1), color='b')
+    plt.plot(np.sum(betas, axis=1), color='r')
+    plt.xlabel('Step number')
+    plt.ylabel('Number of balls')
+    plt.tight_layout()
+
     plt.show()
 
 if __name__=='__main__':
