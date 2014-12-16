@@ -3,7 +3,6 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
-
 def remove_isolates(graph, inplace=False, relabel=True):
     """
     Removes isolated nodes from the graph.
@@ -58,15 +57,16 @@ class PriorUpdater:
     """
     A class that specifies how the prior of a node is updated when it receives a ball.
     """
-    def __init__(self, method='normal'):
+    def __init__(self, method='normal', weight=1):
         self.method = method
+        self.weight = weight
 
     def __call__(self, alpha, beta, node, ball):
         if self.method == 'normal':
             if ball == 0:
-                alpha[node] += 1
+                alpha[node] += self.weight
             else:
-                beta[node] += 1
+                beta[node] += self.weight
         else:
             raise ValueError("Prior update method '{}' is invalid.".format(self.method))
 

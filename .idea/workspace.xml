@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="44f18680-f9e7-474e-8dba-d4c2060200ce" name="Default" comment="" />
+    <list default="true" id="44f18680-f9e7-474e-8dba-d4c2060200ce" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/simulation.py" afterPath="$PROJECT_DIR$/simulation.py" />
+    </list>
     <ignored path="opinion_dynamics.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,8 +31,8 @@
       <file leaf-file-name="simulation.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/simulation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.55813956" vertical-offset="2144" max-vertical-offset="3104">
-              <caret line="149" column="43" selection-start-line="149" selection-start-column="43" selection-end-line="149" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.55813956" vertical-offset="784" max-vertical-offset="3104">
+              <caret line="64" column="22" selection-start-line="64" selection-start-column="22" selection-end-line="64" selection-end-column="22" />
               <folding>
                 <element signature="e#29#47#0" expanded="true" />
               </folding>
@@ -356,8 +358,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/simulation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.55813956" vertical-offset="2144" max-vertical-offset="3104">
-          <caret line="149" column="43" selection-start-line="149" selection-start-column="43" selection-end-line="149" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.55813956" vertical-offset="784" max-vertical-offset="3104">
+          <caret line="64" column="22" selection-start-line="64" selection-start-column="22" selection-end-line="64" selection-end-column="22" />
           <folding>
             <element signature="e#29#47#0" expanded="true" />
           </folding>
