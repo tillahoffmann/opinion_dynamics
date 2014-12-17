@@ -17,11 +17,15 @@ class RunExperiments:
     def run_many(self):
         """Run many experiments!"""
         # To explore passive dynamics
+        endproperties = []
         graph = GraphType(self.num_nodes, 'erdos')
-        stats = self.run_once(graph, 2)
-        self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
-        self.plot_once(stats["mean_belief_balls"], "mean belief balls")
-        # Print out last element of some stats
+        for i in range(1,1000):
+            stats = self.run_once(graph, None)
+            endproperties.append(stats["mean_belief_urn"][len(stats["mean_belief_urn"])-1])
+            #self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
+            #self.plot_once(stats["mean_belief_balls"], "mean belief balls")
+        self.plot_once(endproperties,"mean end belief")
+
 
     def run_once(self, graph, random_seed):
         """Run one experiment"""
@@ -53,10 +57,10 @@ class RunExperiments:
 
     def plot_once(self, property, ylabel):
         """Plot a graph for given property"""
-        endproperty = property[len(property)-1]
+
         plt.figure()
 
-        plt.plot(property)
+        plt.hist(property)
         plt.xlabel('Step number')
         plt.ylabel(ylabel)
         plt.tight_layout()
@@ -64,5 +68,5 @@ class RunExperiments:
         plt.show()
 
 if __name__ == '__main__':
-    experiment_setup = RunExperiments(100000)
-    experiment_setup.run_many()
+     experiment_setup = RunExperiments(1000)
+     experiment_setup.run_many()
