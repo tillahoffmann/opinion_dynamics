@@ -2,7 +2,6 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
-
 from scipy.special import gammaln, polygamma
 
 
