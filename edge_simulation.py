@@ -2,6 +2,7 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
+from control_functions import *
 
 def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
     """
