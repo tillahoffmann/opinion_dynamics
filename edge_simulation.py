@@ -92,12 +92,12 @@ def _main():
     import matplotlib.pyplot as plt
     from scipy import stats
     # Fix a seed for reproducibility
-    seed = None
+    seed = 42
     if seed is not None:
         np.random.seed(seed)
 
     graph = 'pair'
-    vis = 'steady'
+    vis = 'trajectory'
     num_steps = 5000
     num_nodes = 100
     num_runs = 100
@@ -106,8 +106,6 @@ def _main():
         # Define a number of nodes and simulation steps
         num_nodes = 100
 
-        # Set up the initial ball configuration
-        balls = np.ones((num_nodes, 2))
         # Set up a network
         graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
         graph = graph.to_directed()
@@ -121,7 +119,7 @@ def _main():
     balls = np.ones((num_nodes, 2))
 
 
-    if vis == 'mean_belief':
+    if vis == 'trajectory':
         # Simulate one trajectory
         steps = simulate(graph, balls, num_steps)
         # Evaluate the mean belief urn-weighted
