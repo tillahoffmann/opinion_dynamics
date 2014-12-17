@@ -2,7 +2,7 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
-
+from control_functions import *
 
 def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
     """
@@ -114,7 +114,7 @@ def _main():
     graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
     graph = graph.to_directed()
     # Generate a number of steps
-    steps = simulate(graph, balls, num_steps)
+    steps = simulate(graph, balls, num_steps, control=hub_control)
 
     # Evaluate the mean belief urn-weighted
     mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
