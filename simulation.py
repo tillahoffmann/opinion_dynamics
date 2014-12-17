@@ -110,7 +110,7 @@ class Stationarity:
 
 
 def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', stationarity=None,
-             neighbor_selector=None):
+             neighbor_selector=None, control_strategy=None, control_interval=10, control_fraction=0.01):
     """
     Simulates the evolution of the balls in the urns of each node in a network. IMPORTANT: The order of keyword
     arguments is not guaranteed to remain the same. Always set keyword arguments with keyword syntax.
@@ -121,13 +121,16 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     :param node_selector: How to select nodes to transmit information.
     :param prior_updater: How to update the belief of nodes.
     :param neighbor_selector: How to select neighbors.
+    :param control_strategy: How to exercise external control. Options include None and 'top_hubs', which picks out the top nodes by degree and periodically changes the colour of all their balls to type 0.
+    :param control_interval: If exercising control, the number of time steps after which to periodically repeat it.
+    :param control_fraction: If exercising control, the fraction of the network's nodes, sorted by decreasing degree, which will be designated as hubs to be controlled.	
     :return: Two matrices `alpha[t,i]` and `beta[t,i]`, where `t` refers to the simulation step and `i` to the node.
     """
     # Ensure there are no isolated nodes
     degree = np.asarray(graph.degree().values())
     assert np.all(degree > 0), "The graph must not contain isolated nodes. You can remove isolated nodes by " \
                                "calling `remove_isolates`."
-
+      
     # Ensure the nodes are properly labelled
     nodes = np.asarray(graph.nodes())
     assert np.all(nodes == np.arange(len(nodes))), "The nodes must be labelled with a zero-based index. You can " \
@@ -187,7 +190,20 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     alphas = [alpha.copy()]
     betas = [beta.copy()]
 
+    # Get indices of highest-degree nodes (hubs)	
+    num_hubs = int(num_nodes*control_fraction)
+    top_hubs = degree.argsort()[-num_hubs:][::-1]		
+
     for step in range(num_steps):
+	# Check if control strategy is to be implemented
+	if control_strategy is not None:
+		# Check if anything is to be done at this step
+		if step%control_interval==0:
+			# Set beta to 0; change the colour of all balls to alpha
+			for hub in range(num_hubs):
+				alpha[top_hubs[hub]] = alpha[top_hubs[hub]]+beta[top_hubs[hub]]
+				beta[top_hubs[hub]] = 0
+
         # Select a node as the transmitter of information
         node = node_selector(alpha, beta, graph)
         # Obtain the neighbors of the node
@@ -226,27 +242,90 @@ def _main():
     alpha = np.ones(num_nodes)
     beta = np.ones(num_nodes)
 
-    # Run the simulation
-    alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
+    # Run multiple simulations to compare different control strategies
+    num_sims = 1
+    # Variables to store the mean proportion of alpha-coloured balls resulting from each type of simulation	
+    alpha_1 = 0.0
+    alpha_2 = 0.0
+    alpha_3 = 0.0
+	
+    for sim in range(num_sims):
 
-    # Compute the fraction of `alpha` balls in the population and visualise
-    probability = np.mean(alphas / (alphas + betas), axis=1)
-    plt.figure()
-    plt.plot(probability)
-    plt.xlabel('Step number')
-    plt.ylabel('Population probability')
-    plt.tight_layout()
+	# Run the simulation without control
+    	alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
+	# Compute the fraction of `alpha` balls in the population and visualise
+    	probability = np.mean(alphas / (alphas + betas), axis=1)
+    	alpha_1 = alpha_1 + probability[num_steps]	
+	
+    	plt.figure()
+    	plt.plot(probability)
+    	plt.xlabel('Step number')
+    	plt.ylabel('Population probability')
+    	plt.tight_layout()
 
-    # Plot the number of blue and red balls as a function of time
-    plt.figure()
-    plt.plot(np.sum(alphas, axis=1), color='b')
-    plt.plot(np.sum(betas, axis=1), color='r')
-    plt.xlabel('Step number')
-    plt.ylabel('Number of balls')
-    plt.tight_layout()
+    	# Plot the number of blue and red balls as a function of time
+    	plt.figure()
+    	plt.plot(np.sum(alphas, axis=1), color='b')
+    	plt.plot(np.sum(betas, axis=1), color='r')
+    	plt.xlabel('Step number')
+    	plt.ylabel('Number of balls')
+    	plt.tight_layout()
 
-    plt.show()
+    	plt.show()
+	
+		
+    	# Run the simulation with control over top 5% hubs
+    	alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran', control_strategy='top_hubs', control_fraction=0.05)
 
+    	# Compute the fraction of `alpha` balls in the population and visualise
+    	probability = np.mean(alphas / (alphas + betas), axis=1)
+    	alpha_2 = alpha_2 + probability[num_steps]	
+	
+    	plt.figure()
+    	plt.plot(probability)
+    	plt.xlabel('Step number')
+    	plt.ylabel('Population probability')
+    	plt.tight_layout()
+
+    	# Plot the number of blue and red balls as a function of time
+    	plt.figure()
+    	plt.plot(np.sum(alphas, axis=1), color='b')
+    	plt.plot(np.sum(betas, axis=1), color='r')
+    	plt.xlabel('Step number')
+    	plt.ylabel('Number of balls')
+    	plt.tight_layout()
+
+    	plt.show()
+	
+
+	# Run the simulation with control over top 10% hubs 
+    	alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran', control_strategy='top_hubs', control_fraction=0.1)
+
+    	# Compute the fraction of `alpha` balls in the population and visualise
+    	probability = np.mean(alphas / (alphas + betas), axis=1)
+ 	alpha_3 = alpha_3 + probability[num_steps]	
+	
+    	plt.figure()
+    	plt.plot(probability)
+    	plt.xlabel('Step number')
+    	plt.ylabel('Population probability')
+    	plt.tight_layout()
+
+    	# Plot the number of blue and red balls as a function of time
+    	plt.figure()
+    	plt.plot(np.sum(alphas, axis=1), color='b')
+    	plt.plot(np.sum(betas, axis=1), color='r')
+    	plt.xlabel('Step number')
+    	plt.ylabel('Number of balls')
+    	plt.tight_layout()
+
+    	plt.show()
+	
+
+    # Display the mean number of alpha-coloured balls for each type of simulation
+    print(alpha_1/num_sims)
+    print(alpha_2/num_sims)
+    print(alpha_3/num_sims)
 
 if __name__ == '__main__':
     _main()
