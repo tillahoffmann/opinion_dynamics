@@ -37,6 +37,7 @@ np.random.seed(70)
 num_steps = 100000
 num_nodes=2
 G = nx.star_graph(num_nodes-1)
+G = G.to_directed()
 balls = np.ones((num_nodes, 2))
 
 steps = simulate(G, balls, num_steps)
