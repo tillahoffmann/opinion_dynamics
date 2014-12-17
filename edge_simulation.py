@@ -3,7 +3,6 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
-
 def simulate(graph, initial_balls, num_steps):
     """
     Generates a step sequence `S[t, :]` of prior updates. Each row of `S` represents one time step. At time `t`, node
