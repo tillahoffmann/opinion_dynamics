@@ -11,7 +11,7 @@ import seaborn as sns
 from scipy import stats
 
 N = 5**3 # number of timesteps
-nRuns = 10000
+nRuns = 50000
 
 X1 = np.zeros((N,2))
 X2 = np.zeros((N,2))
@@ -61,11 +61,11 @@ for n in range(1, nRuns):
     endPts[n,0] = belief1[-1]
     endPts[n,1] = belief2[-1]
 
-sns.kdeplot(endPts[:,0], c="b")
-sns.kdeplot(endPts[:,1], c="g")
+sns.kdeplot(endPts[:,0], c="b", clip=(0,1))
+sns.kdeplot(endPts[:,1], c="g", clip=(0,1))
 
 x = np.linspace(0,1)
-y = stats.beta(2,2).pdf(x)
+y = stats.beta(2,2).pdf(x) # simulation suggests beta(2.1, 2.1) looks most like it
 plt.plot(x,y)
 
 """         
