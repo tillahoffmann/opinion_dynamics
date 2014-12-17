@@ -1,4 +1,5 @@
 from edge_simulation import *
+from edge_simulation import simulate as till_simulate
 from simulation import *
 
 
@@ -33,7 +34,7 @@ class RunExperiments:
         balls = np.ones((self.num_nodes, 2))
 
         # Run the simulation
-        steps = simulate(graph, balls, self.num_steps)
+        steps = till_simulate(graph, balls, self.num_steps)
         stats = self.collect_stats(balls, steps)
 
         return stats
