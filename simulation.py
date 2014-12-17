@@ -223,7 +223,7 @@ class Stationarity:
                 alpha[node] -= self.weight
 
 
-def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', stationarity=None,
+def simulate_old(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', stationarity=None,
              neighbor_selector=None):
     """
     Simulates the evolution of the balls in the urns of each node in a network. IMPORTANT: The order of keyword
@@ -350,64 +350,6 @@ def GraphType(num_nodes,str):
 
     return graph
 
-
-class RunExperiments:
-    """Class to run experiments from"""
-
-    def __init__(self, num_steps):
-        """Initialize the class"""
-        # Define a number of nodes and simulation steps
-        self.num_nodes = 100
-        self.num_steps = num_steps
-        # How many balls we start with of each colour
-        self.concentration = 3
-
-    def run_many_Hanne(self):
-        """Run many experiemnts!"""
-        # To explore passive dynamics
-        graph = GraphType(self.num_nodes, 'karateclub')
-        stats = self.run_once(graph, 42)
-        plot_once(stats, "mean_belief_per_urn")
-        # Print out last element of some stats
-
-    def run_once(self, graph, random_seed):
-        """Run one experiment"""
-        np.random.seed(random_seed)
-
-        # Remove any isolated nodes and relabel the nodes
-        graph = remove_isolates(graph)
-
-        # Obtain the number of remaining nodes and initialise the alpha and beta vectors
-        num_connected_nodes = graph.number_of_nodes()
-        alpha = self.concentration * np.ones(num_connected_nodes)
-        beta = self.concentration * np.ones(num_connected_nodes)
-
-        # Run the simulation
-        alphas, betas = simulate(graph, alpha, beta, self.num_steps, node_selector='degree',
-                                 neighbor_selector='uniform', stationarity=None)
-
-        summary_stats = SummaryStats(alphas, betas, graph)
-        summary_stats.collect_stats()
-
-        return summary_stats.stats
-
-    def plot_once(self, stats, property):
-        """Plot a graph for given property"""
-        probability = stats[property]
-        plt.figure()
-
-        plt.plot(probability)
-        plt.xlabel('Step number')
-        plt.ylabel(property)
-        plt.tight_layout()
-
-        plt.show()
-
-
-def _main2():
-    experiment_setup = RunExperiments(10000)
-    experiment_setup.run_many_Hanne()
-
 def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
@@ -456,4 +398,4 @@ def _main():
 
 
 if __name__ == '__main__':
-    _main2()
+    _main()
