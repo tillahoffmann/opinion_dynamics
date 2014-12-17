@@ -3,7 +3,7 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
-def simulate(graph, initial_balls, num_steps):
+def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
     """
     Generates a step sequence `S[t, :]` of prior updates. Each row of `S` represents one time step. At time `t`, node
     `S[t,0]` transfers a ball of color `S[t,2]` to node `S[t,1]`.
@@ -11,6 +11,8 @@ def simulate(graph, initial_balls, num_steps):
     :param initial_balls: A 2D-array representing the initial ball configuration. The element `initial_balls[i,c]`
     represents the number of balls of color `c` that node `i` holds.
     :param num_steps: The number of steps to simulate the dynamics for.
+    :param control: A function that implements a control strategy.
+    :param kwargs: Extra keyword arguments passed to the control function.
     :return: A step sequence.
     """
     edges = graph.edges()
@@ -20,18 +22,29 @@ def simulate(graph, initial_balls, num_steps):
     steps = []
 
     for step in range(num_steps):
+        #Apply a control strategy if supplied
+        if control is not None:
+            #Get the controls
+            controls = control(graph, balls, step, **kwargs)
+            #Apply the controls
+            for node, ball, number in controls:
+                balls[node, ball] += number
+                steps.append((None, node, ball, number))
+
         # Select an edge
-        edge = edges[np.random.randint(num_edges)]
-        # Get a transmitter and receiver
-        t, r = np.random.permutation(edge)
+        u, v = edges[np.random.randint(num_edges)]
         # Compute the probability to draw a ball from the transmitter
-        probability = float(balls[t, 0]) / np.sum(balls[t])
+        probability_u = float(balls[u, 0]) / np.sum(balls[u])
+        probability_v = float(balls[v, 0]) / np.sum(balls[v])
         # Draw a ball
-        ball = int(probability > np.random.uniform())
+        ball_u = int(probability_u > np.random.uniform())
+        ball_v = int(probability_v > np.random.uniform())
         # Update the balls
-        balls[r, ball] += 1
+        balls[u, ball_v] += 1
+        balls[v, ball_v] += 1
         # Add to the steps
-        steps.append((t, r, ball))
+        steps.append((u, v, ball_u, 1))
+        steps.append((v, u, ball_v, 1))
 
     return np.array(steps)
 
@@ -48,8 +61,8 @@ def evaluate_statistic(initial_balls, steps, statistic):
     balls = np.array(initial_balls)
     statistics = []
 
-    for _, r, ball in steps:
-        balls[r, ball] += 1
+    for _, r, ball, number in steps:
+        balls[r, ball] += number
         statistics.append(statistic(balls))
 
     return np.asarray(statistics)
@@ -82,7 +95,8 @@ def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
     # Fix a seed for reproducibility
-    np.random.seed(42)
+    seed = 42
+    np.random.seed(seed)
 
     # Define a number of nodes and simulation steps
     num_nodes = 100
@@ -91,16 +105,23 @@ def _main():
     # Set up the initial ball configuration
     balls = np.ones((num_nodes, 2))
     # Set up a network
-    graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes))
+    graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
     # Generate a number of steps
     steps = simulate(graph, balls, num_steps)
 
-    # Evaluate the mean belief
+    # Evaluate the mean belief urn-weighted
     mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
     # Visualise the mean belief
-    plt.plot(mean_belief)
+    plt.plot(mean_belief, label='urn-weighted')
+
+    # Evaluate the mean belief ball-weighted
+    mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_ball_weighted)
+    # Visualise the mean belief
+    plt.plot(mean_belief, label='ball-weighted')
+
     plt.xlabel('Time step')
     plt.ylabel('Urn-weighted mean belief')
+    plt.legend(loc='best')
     plt.tight_layout()
     plt.show()
 
