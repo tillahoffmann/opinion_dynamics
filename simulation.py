@@ -3,6 +3,7 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 from scipy.special import gammaln, polygamma
+import matplotlib.pyplot as plt
 
 
 def remove_isolates(graph, inplace=False, relabel=True):
@@ -364,8 +365,6 @@ def GraphType(num_nodes,str):
         graph = nx.davis_southern_women_graph()
 
     return graph
-
-
 
 def _main():
     # Import plotting library
