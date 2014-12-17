@@ -20,20 +20,22 @@ def main_simulated(stationarity):
     beta = concentration * np.ones(num_nodes)
 
     # Run the simulation
-    return simulate(graph, alpha, beta, num_steps, stationarity=stationarity)
+    return simulate(graph, alpha, beta, num_steps, stationarity=stationarity), graph
 
 def plot_stats(name, data):
-    alphas, betas = data
-    stats = SummaryStats(alphas, betas)
+    (alphas, betas), graph = data
+    stats = SummaryStats(alphas, betas, graph)
     stats.collect_stats()
 
     # Compute the fraction of `alpha` balls in the population and visualise
-    probability = np.mean(alphas / (alphas + betas), axis=1)
+    probability = stats.stats["mean_belief_per_urn"]
     plt.figure()
     plt.plot(probability)
     plt.xlabel('Step number')
-    plt.ylabel('Population probability')
+    plt.ylabel('Urn-based mean probability')
     plt.tight_layout()
+    plt.savefig('figures/{}_mean_belief_per_urn.pdf'.format(name))
+    plt.close()
 
     # Plot the number of blue and red balls as a function of time
     plt.figure()
@@ -42,13 +44,24 @@ def plot_stats(name, data):
     plt.xlabel('Step number')
     plt.ylabel('Number of balls')
     plt.tight_layout()
+    plt.savefig('figures/{}_num_balls.pdf'.format(name))
+    plt.close()
 
     plt.figure()
     plt.plot(stats.stats["mean_entropy_per_urn"])
     plt.xlabel('Step number')
     plt.ylabel('Mean entropy')
+    plt.savefig('figures/{}_entropy.pdf'.format(name))
+    plt.close()
 
-    plt.show()
+    plt.figure()
+    y, yerr = stats.stats["mean_confidence"], stats.stats["std_confidence"]
+    x = np.arange(len(y))
+    plt.errorbar(x, y, yerr)
+    plt.ylabel('Confidence')
+    plt.xlabel('Step number')
+    plt.savefig('figures/{}_confidence.pdf'.format(name))
+    plt.close()
 
 plot_stats('moran', main_simulated('moran'))
 plot_stats('polya', main_simulated('polya'))
