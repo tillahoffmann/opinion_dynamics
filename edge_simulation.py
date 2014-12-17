@@ -2,7 +2,6 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
-from control_functions import *
 
 def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
     """
@@ -68,7 +67,7 @@ def evaluate_statistic(initial_balls, steps, statistic):
 def statistic_mean_belief_urn_weighted(balls):
     """
     Computes the mean urn-weighted belief.
-    :param balls: A 2D-array representing a ball configuration. The element `initial_balls[i,c]` represents
+    :param balls: A 2D-array representing a ball configuration. The element `balls[i,c]` represents
     the number of balls of color `c` that node `i` holds.
     :return: The mean urn-weighted belief.
     """
@@ -80,7 +79,7 @@ def statistic_mean_belief_urn_weighted(balls):
 def statistic_mean_belief_ball_weighted(balls):
     """
     Computes the fraction of balls of color `0`.
-    :param balls: A 2D-array representing a ball configuration. The element `initial_balls[i,c]` represents
+    :param balls: A 2D-array representing a ball configuration. The element `balls[i,c]` represents
     the number of balls of color `c` that node `i` holds.
     :return: The fraction of balls of color `0`.
     """
@@ -112,12 +111,13 @@ def _main():
         # Set up a network
         graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
         graph = graph.to_directed()
-
     elif graph == 'pair':
+        # Create a pair graph
         graph = nx.DiGraph()
         graph.add_edges_from([(0, 1), (1, 0)])
         num_nodes=2
 
+    # Initialise
     balls = np.ones((num_nodes, 2))
 
 
