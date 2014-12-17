@@ -25,7 +25,7 @@ def hub_control(graph, balls, step, control_interval=10, control_fraction=0.1):
 	for hub in range(num_hubs):
 		# Change the colour of all type 1 balls to type 0
 		controls.append((top_hubs[hub], 0, balls[top_hubs[hub], 1]))
-		controls.appned((top_hubs[hub], 1, -balls[top_hubs[hub], 1]))
+		controls.append((top_hubs[hub], 1, -balls[top_hubs[hub], 1]))
 
     return controls
 	

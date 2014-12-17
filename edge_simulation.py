@@ -108,7 +108,7 @@ def _main():
     # Set up a network
     graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
     # Generate a number of steps
-    steps = simulate(graph, balls, num_steps)
+    steps = simulate(graph, balls, num_steps, control=hub_control)
 
     # Evaluate the mean belief urn-weighted
     mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
