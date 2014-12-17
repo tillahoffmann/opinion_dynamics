@@ -36,16 +36,20 @@ def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
         u, v = edges[np.random.randint(num_edges)]
         # Compute the probability to draw a ball from the transmitter
         probability_u = float(balls[u, 0]) / np.sum(balls[u])
-        probability_v = float(balls[v, 0]) / np.sum(balls[v])
         # Draw a ball
         ball_u = int(probability_u > np.random.uniform())
-        ball_v = int(probability_v > np.random.uniform())
         # Update the balls
-        balls[u, ball_v] += 1
-        balls[v, ball_v] += 1
+        balls[v, ball_u] += 1
         # Add to the steps
         steps.append((u, v, ball_u, 1))
+
+        """
+        TODO: check
+        ball_v = int(probability_v > np.random.uniform())
+        probability_v = float(balls[v, 0]) / np.sum(balls[v])
+        balls[v, ball_v] += 1
         steps.append((v, u, ball_v, 1))
+        """
 
     return np.array(steps)
 
@@ -96,8 +100,9 @@ def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
     # Fix a seed for reproducibility
-    seed = 42
-    np.random.seed(seed)
+    seed = None
+    if seed is not None:
+        np.random.seed(seed)
 
     # Define a number of nodes and simulation steps
     num_nodes = 100
@@ -107,6 +112,7 @@ def _main():
     balls = np.ones((num_nodes, 2))
     # Set up a network
     graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
+    graph = graph.to_directed()
     # Generate a number of steps
     steps = simulate(graph, balls, num_steps)
 
