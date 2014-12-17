@@ -3,10 +3,7 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
-edges = np.loadtxt('Enron.txt',skiprows=4)
-
 from scipy.special import gammaln, polygamma
-
 
 
 def remove_isolates(graph, inplace=False, relabel=True):
@@ -40,6 +37,7 @@ class NodeSelector:
         if `degree`, selects nodes proportional to the number of balls in their urn if 'confidence'.
         """
         self.method = method
+        self.degree_weights = None
 
     def __call__(self, alpha, beta, graph, nodes=None):
         # If no nodes are specified, select from all the nodes
@@ -50,13 +48,18 @@ class NodeSelector:
         if self.method == 'uniform':
             return np.random.choice(nodes)
         elif self.method == 'degree':
-            weights = graph.degree().values()
+            # Compute degree weights and cache them
+            if self.degree_weights is None:
+                self.degree_weights = graph.degree().values()
+                self.degree_weights = np.array(self.degree_weights) / float(np.sum(self.degree_weights))
+            weights = self.degree_weights
         elif self.method == 'confidence':
+            # Confidence weights cannot be cached
             weights = alpha + beta
+            weights = np.array(weights) / float(np.sum(weights))
         else:
             raise ValueError("Node selection method '{}' is invalid.".format(self.method))
 
-        weights = np.asarray(weights) / float(np.sum(weights))
         return np.random.choice(nodes, p=weights)
 
 
@@ -161,7 +164,7 @@ class SummaryStats:
 
         # Compute standard entropy.
         for i in probs:
-            ent -= i * log(i, base=n_classes)
+            ent -= i * np.log(i, base=n_classes)
 
         return ent
 
@@ -338,6 +341,7 @@ def GraphType(num_nodes,str):
         graph = nx.powerlaw_cluster_graph(num_nodes, 3,5 / float(num_nodes))
     elif str == 'enron':
         graph = nx.Graph()
+        edges = np.loadtxt('Enron.txt',skiprows=4)
         graph.add_edges_from(edges)
     elif str == 'karateclub':
         graph = nx.karate_club_graph()
@@ -369,13 +373,14 @@ def _main():
     beta = concentration * np.ones(num_nodes)
 
     # Run the simulation
-    alphas, betas = simulate(graph, alpha, beta, num_steps, stationarity='moran')
+    alphas, betas = simulate(graph, alpha, beta, num_steps, node_selector='degree',
+                             neighbor_selector='uniform', stationarity=None)
 
     summary_stats = SummaryStats(alphas, betas, graph)
     summary_stats.collect_stats()
 
     # Compute the fraction of `alpha` balls in the population and visualise
-    probability = summary_stats.stats["mean_prob_alpha_per_urn"]
+    probability = summary_stats.stats["mean_belief_per_urn"]
     plt.figure()
 
     plt.plot(probability)
