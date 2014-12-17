@@ -15,12 +15,12 @@ class RunExperiments:
         self.concentration = 3
 
     def run_many(self):
-        """Run many experiemnts!"""
+        """Run many experiments!"""
         # To explore passive dynamics
-        graph = GraphType(self.num_nodes, 'karateclub')
-        stats = self.run_once(graph, 42)
-        self.plot_once(stats, "mean_belief_urn")
-        self.plot_once(stats, "mean_belief_balls")
+        graph = GraphType(self.num_nodes, 'erdos')
+        stats = self.run_once(graph, 2)
+        self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
+        self.plot_once(stats["mean_belief_balls"], "mean belief balls")
         # Print out last element of some stats
 
     def run_once(self, graph, random_seed):
@@ -51,18 +51,18 @@ class RunExperiments:
 
         return stats
 
-    def plot_once(self, stats, property):
+    def plot_once(self, property, ylabel):
         """Plot a graph for given property"""
-        probability = stats[property]
+        endproperty = property[len(property)-1]
         plt.figure()
 
-        plt.plot(probability)
+        plt.plot(property)
         plt.xlabel('Step number')
-        plt.ylabel(property)
+        plt.ylabel(ylabel)
         plt.tight_layout()
 
         plt.show()
 
 if __name__ == '__main__':
-    experiment_setup = RunExperiments(10000)
+    experiment_setup = RunExperiments(100000)
     experiment_setup.run_many()
