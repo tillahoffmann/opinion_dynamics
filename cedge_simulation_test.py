@@ -1,28 +1,25 @@
 __author__ = 'tillhoffmann'
 
 import numpy as np
-from cedge_simulation import simulate as csimulate
-from cedge_simulation import evaluate_statistic as cevaluate_statistic
-from cedge_simulation import seed_rng
+from cedge_simulation import *
 from datetime import datetime
-from edge_simulation import evaluate_statistic, statistic_mean_belief_ball_weighted, \
-    statistic_mean_belief_urn_weighted, simulate
 import networkx as nx
-
-# Import plotting library
 import matplotlib.pyplot as plt
 from scipy import stats
+
 # Fix a seed for reproducibility
 seed = 42
 if seed is not None:
     np.random.seed(seed)
     seed_rng(seed)
 
-graph = 'erdos'
+# If profile is `True`, no visualisation will be performed
+profile = True
+graph = 'pair'
 vis = 'steady'
 num_steps = 5000
 num_nodes = 100
-num_runs = 10000
+num_runs = 10
 
 if graph == 'erdos':
     # Define a number of nodes and simulation steps
@@ -39,6 +36,52 @@ elif graph == 'pair':
 
 # Initialise
 balls = np.ones((num_nodes, 2))
+
+# Do some comparisons
+if profile:
+    from edge_simulation import simulate as psimulate
+    from edge_simulation import evaluate_statistic as pevaluate_statistic
+    from edge_simulation import statistic_mean_belief_ball_weighted as pstatistic_mean_belief_ball_weighted
+
+    sim_times = []
+    for _ in range(num_runs):
+        # Measure run times for normal run
+        dt = datetime.now()
+        psimulate(graph, balls, num_steps)
+        time = (datetime.now() - dt).total_seconds()
+        # Measure run times for Cython run
+        dt = datetime.now()
+        steps = simulate(graph, balls, num_steps)
+        ctime = (datetime.now() - dt).total_seconds()
+        sim_times.append((time, ctime))
+
+    sim_times = np.asarray(sim_times)
+
+    print "simulate: {} +- {} s".format(np.mean(sim_times[:,0]), np.std(sim_times[:,0]))
+    print "csimulate: {} +- {} s".format(np.mean(sim_times[:,1]), np.std(sim_times[:,1]))
+    ratio = sim_times[:, 0] / sim_times[:, 1]
+    print "ratio: {} +- {}".format(np.mean(ratio), np.std(ratio))
+
+    eval_times = []
+    for _ in range(num_runs):
+        # Measure run times for normal run
+        dt = datetime.now()
+        pevaluate_statistic(balls, steps, pstatistic_mean_belief_ball_weighted)
+        time = (datetime.now() - dt).total_seconds()
+        # Measure run times for Cython run
+        dt = datetime.now()
+        evaluate_statistic(balls, steps, statistic_mean_belief_ball_weighted)
+        ctime = (datetime.now() - dt).total_seconds()
+        eval_times.append((time, ctime))
+
+    eval_times = np.asarray(eval_times)
+
+    print "simulate: {} +- {} s".format(np.mean(eval_times[:,0]), np.std(eval_times[:,0]))
+    print "csimulate: {} +- {} s".format(np.mean(eval_times[:,1]), np.std(eval_times[:,1]))
+    ratio = eval_times[:, 0] / eval_times[:, 1]
+    print "ratio: {} +- {}".format(np.mean(ratio), np.std(ratio))
+
+    exit()
 
 
 if vis == 'trajectory':
@@ -65,7 +108,7 @@ elif vis == 'steady':
     for run in range(num_runs):
         # Simulate one trajectory
         dt = datetime.now()
-        final_balls = csimulate(graph, balls, num_steps, output='last')
+        final_balls = simulate(graph, balls, num_steps, output='last')
         if run % 1000 == 0:
             print run, (datetime.now() - dt).total_seconds()
         # Evaluate the mean belief urn-weighted

@@ -4,11 +4,70 @@ from libc.stdlib cimport rand, RAND_MAX, srand
 cimport cython
 cdef extern from "time.h":
     unsigned long int time(unsigned long int)
+ctypedef float (*f_type)(np.ndarray[np.float_t, ndim=2])
 
 def seed_rng(seed=None):
+    """
+    Seeds the C random number generator.
+    :param seed: The seed to supply the random number generator with. The seed is time-based if `None`.
+    """
+    # Get a time-based seed is none is supplied
     if seed is None:
         seed = time(0)
+    # Set the seed
     srand(seed)
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+cdef float cstatistic_mean_belief_urn_weighted(np.ndarray[np.float_t, ndim=2] balls):
+    """
+    See `statistic_mean_belief_urn_weighted`.
+    """
+    cdef float mean_belief
+    cdef int node, num_nodes = balls.shape[0]
+
+    for node in range(num_nodes):
+        mean_belief += balls[node, 0] / float(balls[node, 0] + balls[node, 1])
+
+    return mean_belief / num_nodes
+
+
+def statistic_mean_belief_urn_weighted(balls):
+    """
+    Computes the mean urn-weighted belief.
+    :param balls: A 2D-array representing a ball configuration. The element `balls[i,c]` represents
+    the number of balls of color `c` that node `i` holds.
+    :return: The mean urn-weighted belief.
+    """
+    return cstatistic_mean_belief_urn_weighted(balls)
+
+@cython.boundscheck(False)
+@cython.cdivision(True)
+cdef float cstatistic_mean_belief_ball_weighted(np.ndarray[np.float_t, ndim=2] balls):
+    """
+    See `statistic_mean_belief_ball_weighted`.
+    """
+    # Compute the fraction of balls of a given colour
+    cdef float ball0 = 0, ball1 = 0
+    cdef int node, num_nodes = balls.shape[0]
+
+    for node in range(num_nodes):
+        ball0 += balls[node, 0]
+        ball1 += balls[node, 1]
+
+    return ball0 / (ball0 + ball1)
+
+
+def statistic_mean_belief_ball_weighted(balls):
+    """
+    Computes the fraction of balls of color `0`.
+    :param balls: A 2D-array representing a ball configuration. The element `balls[i,c]` represents
+    the number of balls of color `c` that node `i` holds.
+    :return: The fraction of balls of color `0`.
+    """
+    # Compute the fraction of balls of a given colour
+    return cstatistic_mean_belief_ball_weighted(balls)
+
 
 @cython.boundscheck(False)
 def evaluate_statistic(np.ndarray[np.float_t, ndim=2] initial_balls, np.ndarray[np.float_t, ndim=2] steps, statistic):
@@ -24,14 +83,31 @@ def evaluate_statistic(np.ndarray[np.float_t, ndim=2] initial_balls, np.ndarray[
     cdef list statistics = []
     cdef int step, num_steps, ball, receiver
     cdef float number
+    cdef f_type cstatistic
+    cdef bint use_cstatistic = True
 
+    # Check if there is a C implementation
+    if statistic == statistic_mean_belief_ball_weighted:
+        cstatistic = cstatistic_mean_belief_ball_weighted
+    elif statistic == statistic_mean_belief_urn_weighted:
+        cstatistic = cstatistic_mean_belief_urn_weighted
+    else:
+        # Just call the function
+        use_cstatistic = False
+
+    # Iterate over the balls
     num_steps = steps.shape[0]
     for step in range(num_steps):
+        # Update the ball configuration
         receiver = int(steps[step, 1])
         ball = int(steps[step, 2])
         number = steps[step, 3]
         balls[receiver, ball] += number
-        statistics.append(statistic(balls))
+        # Compute the statistic
+        if use_cstatistic != 0:
+            statistics.append(cstatistic(balls))
+        else:
+            statistics.append(statistic(balls))
 
     return np.asarray(statistics)
 
