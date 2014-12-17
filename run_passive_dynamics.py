@@ -17,8 +17,9 @@ class RunExperiments:
         """Run many experiemnts!"""
         # To explore passive dynamics
         graph = GraphType(self.num_nodes, 'karateclub')
-        mean_belief = self.run_once(graph, 42)
-        self.plot_once(stats, mean_belief, "Mean belief per urn")
+        stats = self.run_once(graph, 42)
+        self.plot_once(stats, "mean_belief_urn")
+        self.plot_once(stats, "mean_belief_balls")
         # Print out last element of some stats
 
     def run_once(self, graph, random_seed):
@@ -33,23 +34,30 @@ class RunExperiments:
 
         # Run the simulation
         steps = simulate(graph, balls, self.num_steps)
-        mean_belief = evaluate_statistic(balls, steps,
-                                         statistic_mean_belief_urn_weighted)
+        stats = self.collect_stats(balls, steps)
 
-        return mean_belief
-       # summary_stats = SummaryStats(alphas, betas, graph)
-       # summary_stats.collect_stats()
+        return stats
 
-      #  return summary_stats.stats
+    def collect_stats(self, balls, steps):
+        """Collect stats for the run"""
+        stats = {}
+        stats["mean_belief_urn"] \
+            = evaluate_statistic(balls, steps,
+                                 statistic_mean_belief_urn_weighted)
+        stats["mean_belief_balls"] = \
+            evaluate_statistic(balls, steps,
+                               statistic_mean_belief_ball_weighted)
 
-    def plot_once(self, stats, property, x_label):
+        return stats
+
+    def plot_once(self, stats, property):
         """Plot a graph for given property"""
         probability = stats[property]
         plt.figure()
 
         plt.plot(probability)
         plt.xlabel('Step number')
-        plt.ylabel(x_label)
+        plt.ylabel(property)
         plt.tight_layout()
 
         plt.show()
