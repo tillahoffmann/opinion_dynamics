@@ -3,6 +3,7 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 from scipy.special import gammaln, polygamma
+import matplotlib.pyplot as plt
 
 
 def remove_isolates(graph, inplace=False, relabel=True):
@@ -223,7 +224,7 @@ class Stationarity:
 
 
 def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updater='normal', stationarity=None,
-             neighbor_selector=None):
+             neighbor_selector=None, control_strategy=None, control_interval=10, control_fraction=0.1):
     """
     Simulates the evolution of the balls in the urns of each node in a network. IMPORTANT: The order of keyword
     arguments is not guaranteed to remain the same. Always set keyword arguments with keyword syntax.
@@ -234,13 +235,16 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     :param node_selector: How to select nodes to transmit information.
     :param prior_updater: How to update the belief of nodes.
     :param neighbor_selector: How to select neighbors.
+    :param control_strategy: How to exercise external control. Options include None and 'top_hubs', which picks out the top nodes by degree and periodically changes the colour of all their balls to type 0.
+    :param control_interval: If exercising control, the number of time steps after which to periodically repeat it.
+    :param control_fraction: If exercising control, the fraction of the network's nodes, sorted by decreasing degree, which will be designated as hubs to be controlled.	
     :return: Two matrices `alpha[t,i]` and `beta[t,i]`, where `t` refers to the simulation step and `i` to the node.
     """
     # Ensure there are no isolated nodes
     degree = np.asarray(graph.degree().values())
     assert np.all(degree > 0), "The graph must not contain isolated nodes. You can remove isolated nodes by " \
                                "calling `remove_isolates`."
-
+      
     # Ensure the nodes are properly labelled
     nodes = np.asarray(graph.nodes())
     assert np.all(nodes == np.arange(len(nodes))), "The nodes must be labelled with a zero-based index. You can " \
@@ -300,7 +304,20 @@ def simulate(graph, alpha, beta, num_steps, node_selector='uniform', prior_updat
     alphas = [alpha.copy()]
     betas = [beta.copy()]
 
+    # Get indices of highest-degree nodes (hubs)	
+    num_hubs = int(num_nodes*control_fraction)
+    top_hubs = degree.argsort()[-num_hubs:][::-1]		
+
     for step in range(num_steps):
+	# Check if control strategy is to be implemented
+	if control_strategy is not None:
+		# Check if anything is to be done at this step
+		if step%control_interval==0:
+			# Set beta to 0; change the colour of all balls to alpha
+			for hub in range(num_hubs):
+				alpha[top_hubs[hub]] = alpha[top_hubs[hub]]+beta[top_hubs[hub]]
+				beta[top_hubs[hub]] = 0
+
         # Select a node as the transmitter of information
         node = node_selector(alpha, beta, graph)
         # Obtain the neighbors of the node
@@ -349,8 +366,6 @@ def GraphType(num_nodes,str):
 
     return graph
 
-
-
 def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
@@ -371,32 +386,42 @@ def _main():
     alpha = concentration * np.ones(num_nodes)
     beta = concentration * np.ones(num_nodes)
 
-    # Run the simulation
-    alphas, betas = simulate(graph, alpha, beta, num_steps, node_selector='degree',
-                             neighbor_selector='uniform', stationarity=None)
+    # Run multiple simulations to get mean behaviour
+    num_sims = 1
+    # Variable to store the mean proportion of alpha-coloured balls resulting from the simulations
+    alpha_m = 0.0
+	
+    for sim in range(num_sims):
 
-    summary_stats = SummaryStats(alphas, betas, graph)
-    summary_stats.collect_stats()
+	# Run the simulation
+	alphas, betas = simulate(graph, alpha, beta, num_steps, node_selector='degree', neighbor_selector='uniform', stationarity=None, control_strategy=None)
 
-    # Compute the fraction of `alpha` balls in the population and visualise
-    probability = summary_stats.stats["mean_belief_per_urn"]
-    plt.figure()
+    	summary_stats = SummaryStats(alphas, betas, graph)
+    	summary_stats.collect_stats()
 
-    plt.plot(probability)
-    plt.xlabel('Step number')
-    plt.ylabel('Population probability')
-    plt.tight_layout()
+    	# Compute the fraction of `alpha` balls in the population and visualise
+    	probability = summary_stats.stats["mean_belief_per_urn"]	
+	alpha_m = alpha_m + probability[num_steps]	
 
-    # Plot the number of blue and red balls as a function of time
-    plt.figure()
-    plt.plot(np.sum(alphas, axis=1), color='b')
-    plt.plot(np.sum(betas, axis=1), color='r')
-    plt.xlabel('Step number')
-    plt.ylabel('Number of balls')
-    plt.tight_layout()
+    	plt.figure()
 
-    plt.show()
+    	plt.plot(probability)
+    	plt.xlabel('Step number')
+    	plt.ylabel('Population probability')
+    	plt.tight_layout()
 
+    	# Plot the number of blue and red balls as a function of time
+    	plt.figure()
+    	plt.plot(np.sum(alphas, axis=1), color='b')
+    	plt.plot(np.sum(betas, axis=1), color='r')
+    	plt.xlabel('Step number')
+    	plt.ylabel('Number of balls')
+    	plt.tight_layout()
+
+    	plt.show()
+   
+    # Display the mean number of alpha-coloured balls across all simulations
+    print(alpha_m/num_sims)
 
 if __name__ == '__main__':
     _main()
