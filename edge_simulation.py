@@ -43,14 +43,6 @@ def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
         # Add to the steps
         steps.append((u, v, ball_u, 1))
 
-        """
-        TODO: check
-        ball_v = int(probability_v > np.random.uniform())
-        probability_v = float(balls[v, 0]) / np.sum(balls[v])
-        balls[v, ball_v] += 1
-        steps.append((v, u, ball_v, 1))
-        """
-
     return np.array(steps)
 
 
@@ -99,15 +91,17 @@ def statistic_mean_belief_ball_weighted(balls):
 def _main():
     # Import plotting library
     import matplotlib.pyplot as plt
+    from scipy import stats
     # Fix a seed for reproducibility
     seed = None
     if seed is not None:
         np.random.seed(seed)
 
     graph = 'pair'
-    vis = 'mean_belief'
-    num_steps = 10000
+    vis = 'steady'
+    num_steps = 5000
     num_nodes = 100
+    num_runs = 100
 
     if graph == 'erdos':
         # Define a number of nodes and simulation steps
@@ -125,10 +119,11 @@ def _main():
         num_nodes=2
 
     balls = np.ones((num_nodes, 2))
-    steps = simulate(graph, balls, num_steps)
 
 
     if vis == 'mean_belief':
+        # Simulate one trajectory
+        steps = simulate(graph, balls, num_steps)
         # Evaluate the mean belief urn-weighted
         mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
         # Visualise the mean belief
@@ -142,6 +137,25 @@ def _main():
         plt.xlabel('Time step')
         plt.ylabel('Urn-weighted mean belief')
         plt.legend(loc='best')
+        plt.tight_layout()
+        plt.show()
+    elif vis == 'steady':
+        values = []
+        # Simulate a number of trajectories
+        for run in range(num_runs):
+            # Simulate one trajectory
+            steps = simulate(graph, balls, num_steps)
+            # Evaluate the mean belief urn-weighted
+            mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
+            values.append(mean_belief[-1])
+            print run
+        # Plot a histogram
+        x = np.linspace(0, 1)
+        kde = stats.gaussian_kde(values)
+        y = kde(x)
+        plt.plot(x, y)
+        plt.xlabel('Steady-state belief')
+        plt.ylabel('Probability')
         plt.tight_layout()
         plt.show()
 
