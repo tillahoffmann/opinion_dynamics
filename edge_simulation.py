@@ -37,7 +37,7 @@ def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
         # Compute the probability to draw a ball from the transmitter
         probability_u = float(balls[u, 0]) / np.sum(balls[u])
         # Draw a ball
-        ball_u = int(probability_u > np.random.uniform())
+        ball_u = int(probability_u < np.random.uniform())
         # Update the balls
         balls[v, ball_u] += 1
         # Add to the steps
@@ -104,33 +104,47 @@ def _main():
     if seed is not None:
         np.random.seed(seed)
 
-    # Define a number of nodes and simulation steps
-    num_nodes = 100
+    graph = 'pair'
+    vis = 'mean_belief'
     num_steps = 10000
+    num_nodes = 100
 
-    # Set up the initial ball configuration
+    if graph == 'erdos':
+        # Define a number of nodes and simulation steps
+        num_nodes = 100
+
+        # Set up the initial ball configuration
+        balls = np.ones((num_nodes, 2))
+        # Set up a network
+        graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
+        graph = graph.to_directed()
+
+    elif graph == 'pair':
+        graph = nx.DiGraph()
+        graph.add_edges_from([(0, 1), (1, 0)])
+        num_nodes=2
+
     balls = np.ones((num_nodes, 2))
-    # Set up a network
-    graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
-    graph = graph.to_directed()
-    # Generate a number of steps
-    steps = simulate(graph, balls, num_steps, control=hub_control)
+    steps = simulate(graph, balls, num_steps)
 
-    # Evaluate the mean belief urn-weighted
-    mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
-    # Visualise the mean belief
-    plt.plot(mean_belief, label='urn-weighted')
 
-    # Evaluate the mean belief ball-weighted
-    mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_ball_weighted)
-    # Visualise the mean belief
-    plt.plot(mean_belief, label='ball-weighted')
+    if vis == 'mean_belief':
+        # Evaluate the mean belief urn-weighted
+        mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_urn_weighted)
+        # Visualise the mean belief
+        plt.plot(mean_belief, label='urn-weighted')
 
-    plt.xlabel('Time step')
-    plt.ylabel('Urn-weighted mean belief')
-    plt.legend(loc='best')
-    plt.tight_layout()
-    plt.show()
+        # Evaluate the mean belief ball-weighted
+        mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_ball_weighted)
+        # Visualise the mean belief
+        plt.plot(mean_belief, label='ball-weighted')
+
+        plt.xlabel('Time step')
+        plt.ylabel('Urn-weighted mean belief')
+        plt.legend(loc='best')
+        plt.tight_layout()
+        plt.show()
+
 
 if __name__=='__main__':
     _main()
