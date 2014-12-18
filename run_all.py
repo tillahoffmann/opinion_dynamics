@@ -1,8 +1,13 @@
-from edge_simulation import *
 from helper_functions import *
 from control_functions import *
 import csv
 
+#from edge_simulation import *
+try:
+    from cedge_simulation import *
+except:
+    print "Cython not available. Reverting to python."
+    from edge_simulation import *
 
 class RunExperiments:
     """Class to run experiments from"""
@@ -68,9 +73,17 @@ class RunExperiments:
         """Run one setup many times"""
         end_props = []
         for num in range(0, self.num_runs):
+            """
+            from datetime import datetime
+            dt = datetime.now()
             running_stats = self.run_once(graph, control)
             end_prop = self.return_end_points(running_stats)
+            print (datetime.now() - dt).total_seconds()
+            dt = datetime.now()
+            """
+            end_prop = self.run_once_quick(graph, control)
             end_props.append(end_prop)
+            #print (datetime.now() - dt).total_seconds()
         end_prop_distributions = self.collate_end_props(end_props)
 
         if control is None:
@@ -127,6 +140,23 @@ class RunExperiments:
 
         return stats
 
+    def run_once_quick(self, graph, control, random_seed=None):
+        """Run one experiment"""
+        np.random.seed(random_seed)
+
+        # Remove any isolated nodes and relabel the nodes
+        graph = remove_isolates(graph)
+        graph = graph.to_directed()
+
+        # Initialize the nodes
+        balls = np.ones((graph.number_of_nodes(), 2))
+
+        # Run the simulation
+        balls = simulate(graph, balls, self.num_steps, 'last', control=control, burn_in=self.burn_in)
+        stats = self.collect_stats_quick(balls)
+
+        return stats
+
     def collect_stats(self, balls, steps):
         """Collect stats for the run"""
         stats = {}
@@ -141,6 +171,15 @@ class RunExperiments:
                                statistic_std_belief_urn_weighted)
 
         #TODO: add more summary stats here
+        return stats
+
+    def collect_stats_quick(self, balls):
+        """Collect stats for the run"""
+        stats = {}
+        stats["mean_belief_urn"] = statistic_mean_belief_urn_weighted(balls)
+        stats["mean_belief_balls"] = statistic_mean_belief_ball_weighted(balls)
+        stats["std_belief_urns"] = statistic_std_belief_urn_weighted(balls)
+
         return stats
 
     def plot_once(self, property, ylabel):
