@@ -16,7 +16,7 @@ def _main():
     num_nodes = 100
 
     # Define a number of simulations to be run
-    num_sim = 100
+    num_sim = 10
 
     # Define variables to store final mean beliefs over all simulations
     urn_avg = []
