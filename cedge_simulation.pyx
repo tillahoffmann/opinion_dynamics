@@ -23,7 +23,7 @@ cdef float cstatistic_mean_belief_urn_weighted(np.ndarray[np.float_t, ndim=2] ba
     """
     See `statistic_mean_belief_urn_weighted`.
     """
-    cdef float mean_belief
+    cdef float mean_belief = 0
     cdef int node, num_nodes = balls.shape[0]
 
     for node in range(num_nodes):
@@ -92,7 +92,7 @@ def evaluate_statistic(np.ndarray[np.float_t, ndim=2] initial_balls, np.ndarray[
     elif statistic == statistic_mean_belief_urn_weighted:
         cstatistic = cstatistic_mean_belief_urn_weighted
     else:
-        # Just call the function
+        # Just call the C function
         use_cstatistic = False
 
     # Iterate over the balls
@@ -138,9 +138,12 @@ def simulate(graph, np.ndarray[np.float_t, ndim=2] initial_balls, int num_steps,
         #Apply a control strategy if supplied
         if control is not None:
             #Get the controls
-            controls = control(graph, balls, step, **kwargs)
+            controls = np.asarray(control(graph, balls, step, **kwargs), np.float)
             #Apply the controls
-            for node, ball, number in controls:
+            for idx in range(controls.shape[0]):
+                node = int(controls[idx, 0])
+                ball = int(controls[idx, 1])
+                number = controls[idx, 2]
                 balls[node, ball] += number
                 steps.append((None, node, ball, number))
 

@@ -7,6 +7,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from scipy import stats
 
+def moving_average(a, n=3) :
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
+
 # Fix a seed for reproducibility
 seed = 42
 if seed is not None:
@@ -14,12 +19,13 @@ if seed is not None:
     seed_rng(seed)
 
 # If profile is `True`, no visualisation will be performed
-profile = True
-graph = 'pair'
-vis = 'steady'
-num_steps = 5000
+profile = False
+graph = 'erdos'
+vis = 'trajectory'
+num_steps = 10000
 num_nodes = 100
 num_runs = 10
+window = 100
 
 if graph == 'erdos':
     # Define a number of nodes and simulation steps
@@ -92,13 +98,19 @@ if vis == 'trajectory':
     # Visualise the mean belief
     plt.plot(mean_belief, label='urn-weighted')
 
+    mean_belief = moving_average(mean_belief, window)
+    plt.plot(window / 2 + np.arange(mean_belief.shape[0]), mean_belief)
+
     # Evaluate the mean belief ball-weighted
     mean_belief = evaluate_statistic(balls, steps, statistic_mean_belief_ball_weighted)
     # Visualise the mean belief
     plt.plot(mean_belief, label='ball-weighted')
 
+    mean_belief = moving_average(mean_belief, window)
+    plt.plot(window / 2 + np.arange(mean_belief.shape[0]), mean_belief)
+
     plt.xlabel('Time step')
-    plt.ylabel('Urn-weighted mean belief')
+    plt.ylabel('Mean belief')
     plt.legend(loc='best')
     plt.tight_layout()
     plt.show()
