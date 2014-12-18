@@ -58,10 +58,19 @@ def random_control(graph, balls, step, control_interval=100, control_fraction=0.
 
 
 
-def tom_control(graph, balls, step, control_interval=10, control_fraction=0.1):
+def tom_control(graph, balls, step, control_interval=10, control_fraction=0.1, control_balls=50):
 
 
+'''
+    Exercises control by periodically targeting a certain fraction of the nodes at random and sending them a fixed number of balls of colour 0.
+    :param graph: The graph on which dynamics are being simulated.
+    :param balls: The current distribution of balls at nodes.
+    :param step: The current time step.
+    :param control_interval: The interval in time steps at which control is to be exercised.
+    :param control_fraction: The fraction of nodes to be targeted.
+    :param control_balls: The total number of balls available to the controller at each iteration.
 	influence = [0]*graph.number_of_nodes
+'''
 
 	for node in graph.number_of_nodes():
 		neighbors_array = graph.neighbors(node)
@@ -77,9 +86,10 @@ def tom_control(graph, balls, step, control_interval=10, control_fraction=0.1):
 	
 	
     if step % control_interval==0:
+    	balls_per_node = control_balls/num_influence
 	for i in range(num_influence):
 		# Add balls of colour 0
-		controls.append((top_influence_nodes[i], 0, balls[top_influence_nodes[i], amount]))
+		controls.append((top_influence_nodes[i], 0, balls[top_influence_nodes[i], balls_per_node]))
 
     return controls
 
