@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from random import randint
 
-def hub_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=0.1):
+def hub_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=1):
     """
     Exercises control by periodically targeting hubs (high-degree nodes) and sending them a fixed number of balls of colour 0.
     :param graph: The graph on which dynamics are being simulated.
@@ -35,7 +35,7 @@ def hub_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interv
     return controls
 
 
-def degree_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=0.1):
+def degree_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=1):
     """
     Exercises control by periodically targeting a certain fraction of nodes (with higher-degree nodes more likely to be chosen) and sending them a fixed number of balls of colour 0.
     :param graph: The graph on which dynamics are being simulated.
@@ -73,7 +73,7 @@ def degree_control(graph, balls, step, burn_in=5000, burn_out=10000, control_int
     return controls
 
 
-def random_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=0.1):
+def random_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=1):
     """
     Exercises control by periodically targeting a certain fraction of the nodes at random and sending them a fixed number of balls of colour 0.
     :param graph: The graph on which dynamics are being simulated.
@@ -102,7 +102,7 @@ def random_control(graph, balls, step, burn_in=5000, burn_out=10000, control_int
     return controls
 
 
-def tom_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=0.1):
+def tom_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_fraction=0.1, control_balls_fraction=1):
     """
         Exercises control by periodically targeting a certain fraction of the nodes at random and sending them a fixed number of balls of colour 0.
         :param graph: The graph on which dynamics are being simulated.
@@ -139,7 +139,7 @@ def tom_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interv
     return controls
 
 
-def broadcast_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_balls_fraction=0.1):
+def broadcast_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interval=100, control_balls_fraction=1):
     """
     Exercises control by periodically sending all nodes a fixed number of balls of colour 0.
     :param graph: The graph on which dynamics are being simulated.
