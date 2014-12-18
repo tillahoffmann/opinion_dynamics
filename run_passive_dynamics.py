@@ -17,44 +17,47 @@ class RunExperiments:
     def run_many(self):
         """Run many experiments!"""
         # To explore passive dynamics
-        ps_for_graphs = [0.01, 0.05, 0.1]
+        graph_ER_01 = GraphType(self.num_nodes, 'erdos', p=0.01)
+        graph_ER_1 = GraphType(self.num_nodes, 'erdos', p=0.1)
+        graphs = [graph_ER_01, graph_ER_1]
+        graph_names = ["graph_ER_01", "graph_ER_1"]
         with open('mean_belief_urns.csv', 'wb') as mean_csvfile:
             with open('std_belief_urns.csv', 'wb') as std_csvfile:
                 mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
                 std_results_writer = csv.writer(std_csvfile, delimiter=',')
-                for p in ps_for_graphs:
-                    graph = GraphType(self.num_nodes, 'erdos', p=p)
+                for idx, graph in enumerate(graphs):
+
                     # Show the time-course of one run -- useful to check if we have
                     # settled down
                     # stats = self.run_once(graph, control=None)
                     # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
 
-                    self.run_one_setup_many_runs(graph, p,
+                    self.run_one_setup_many_runs(graph, graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=None)
 
-                    self.run_one_setup_many_runs(graph, p,
+                    self.run_one_setup_many_runs(graph, graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=broadcast_control)
 
-                    self.run_one_setup_many_runs(graph, p,
+                    self.run_one_setup_many_runs(graph, graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=random_control)
 
-                    self.run_one_setup_many_runs(graph, p,
+                    self.run_one_setup_many_runs(graph, graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=hub_control)
 
-                    self.run_one_setup_many_runs(graph, p,
+                    self.run_one_setup_many_runs(graph, graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=tom_control)
 
-    def run_one_setup_many_runs(self, graph, p, mean_results_writer,
+    def run_one_setup_many_runs(self, graph, graph_name, mean_results_writer,
                                 std_results_writer, control):
         """Run one setup many times"""
         end_props = []
@@ -69,8 +72,8 @@ class RunExperiments:
         else:
             control_str = control.__name__
 
-        mean_urns = [p, control_str] + end_prop_distributions["mean_belief_urn"]
-        std_urns = [p, control_str] + end_prop_distributions["std_belief_urns"]
+        mean_urns = [graph_name, control_str] + end_prop_distributions["mean_belief_urn"]
+        std_urns = [graph_name, control_str] + end_prop_distributions["std_belief_urns"]
 
         mean_results_writer.writerow(mean_urns)
         std_results_writer.writerow(std_urns)
