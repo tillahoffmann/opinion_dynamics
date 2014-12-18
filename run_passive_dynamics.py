@@ -1,5 +1,6 @@
 from edge_simulation import *
 from helper_functions import *
+import csv
 
 
 class RunExperiments:
@@ -15,43 +16,39 @@ class RunExperiments:
     def run_many(self):
         """Run many experiments!"""
         # To explore passive dynamics
+        ps_for_graphs = [0.01, 0.05, 0.1]
+        with open('mean_belief_urns.csv', 'wb') as csvfile:
+            results_writer = csv.writer(csvfile, delimiter=',')
+            for p in ps_for_graphs:
+                graph = GraphType(self.num_nodes, 'erdos', p=p)
+                control = "passive"
+                # Show the time-course of one run -- useful to check if we have
+                # settled down
+                # stats = self.run_once(graph, control)
+                # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
+
+                mean_urns, std_urns = \
+                    self.run_one_setup_many_runs(graph, control, p)
+
+                results_writer.writerow(mean_urns)
+
+                # self.plot_hist(end_prop_distributions["mean_belief_urn"],
+                #                "mean urn end belief")
+
+
+    def run_one_setup_many_runs(self, graph, control, p):
+        """Run one setup many times"""
         end_props = []
-        p = 0.05
-        graph = GraphType(self.num_nodes, 'erdos', p=p)
-
-        # Show the time-course of one run -- useful to check if we have
-        # settled down
-        stats = self.run_once(graph, None)
-        # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
-        # self.plot_once(stats["mean_belief_balls"], "mean belief overall")
-
-        # Show the distribution of end values
         for num in range(0, self.num_runs):
-            running_stats = self.run_once(graph, None)
+            running_stats = self.run_once(graph, control)
             end_prop = self.return_end_points(running_stats)
             end_props.append(end_prop)
         end_prop_distributions = self.collate_end_props(end_props)
 
-        self.print_end_dists(end_prop_distributions["mean_belief_urn"],
-                             "Mean belief of urns", p)
-        self.print_end_dists(end_prop_distributions["std_belief_urns"],
-                             "Std of belief of urns", p)
+        mean_urns = [p, control] + end_prop_distributions["mean_belief_urn"]
+        std_urns = [p, control] + end_prop_distributions["std_belief_urns"]
 
-        self.print_end_dists(end_prop_distributions["mean_belief_balls"],
-                             "Mean belief of balls", p)
-
-        # self.plot_hist(end_prop_distributions["mean_belief_urn"],
-        #                "mean urn end belief")
-        # self.plot_hist(end_prop_distributions["mean_belief_balls"],
-        #                "mean overall end belief")
-        # self.plot_hist(end_prop_distributions["std_belief_urns"],
-        #                "standard deviation of urns end belief")
-
-    def print_end_dists(self, property, label, p):
-        """Print out end distributions"""
-        p25, p50, p75 = np.percentile(property, [25, 50, 75])
-        print("{}, p of {}: median is {}, IQR is {}"
-              .format(label, p, p50, p75 - p25))
+        return mean_urns, std_urns
 
     def return_end_points(self, running_stats):
         """Calculate statistics at end point"""
@@ -77,7 +74,7 @@ class RunExperiments:
 
         return end_prop_distributions
 
-    def run_once(self, graph, random_seed):
+    def run_once(self, graph, control, random_seed=None):
         """Run one experiment"""
         np.random.seed(random_seed)
 
@@ -130,5 +127,5 @@ class RunExperiments:
 
 if __name__ == '__main__':
     # Initialize with num timesteps, num runs
-     experiment_setup = RunExperiments(10000, 5)
+     experiment_setup = RunExperiments(1000, 5)
      experiment_setup.run_many()
