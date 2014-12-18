@@ -7,11 +7,12 @@ import csv
 class RunExperiments:
     """Class to run experiments from"""
 
-    def __init__(self, num_steps, num_runs, graphs, graph_names,
+    def __init__(self, num_steps, burn_in, num_runs, graphs, graph_names,
                  std_file_name, mean_file_name):
         """Initialize the class"""
         # Define a number of nodes and simulation steps
         self.num_steps = num_steps
+        self.burn_in = burn_in
         self.num_runs = num_runs
         self.graphs = graphs
         self.graph_names = graph_names
@@ -41,22 +42,22 @@ class RunExperiments:
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=broadcast_control)
+                                                 control=broadcast_control(burn_in=self.burn_in))
 
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=random_control)
+                                                 control=random_control(burn_in=self.burn_in))
 
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=hub_control)
+                                                 control=hub_control(burn_in=self.burn_in))
 
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=tom_control)
+                                                 control=tom_control(burn_in=self.burn_in))
 
     def run_one_setup_many_runs(self, graph, graph_name, mean_results_writer,
                                 std_results_writer, control):
@@ -162,7 +163,7 @@ if __name__ == '__main__':
     config = open('experiment_config.txt', 'r')
     experiment = config.read()
     exec(experiment)
-    
+
     # auto-construct the graph and graph_name lists
     graphs = []
     graph_names = []  
@@ -171,8 +172,8 @@ if __name__ == '__main__':
         if (type(locals()[i]) == type(nx.Graph())) or (type(locals()[i]) == type(nx.DiGraph())):
             graphs.append(locals()[i])
             graph_names.append(i) 
-               
+
     experiment_setup = \
-        RunExperiments(num_steps, num_runs, graphs, graph_names,
+        RunExperiments(num_steps, burn_in, num_runs, graphs, graph_names,
                        "std_belief_urns.csv", "mean_belief_urns.csv")
     experiment_setup.run_many()
