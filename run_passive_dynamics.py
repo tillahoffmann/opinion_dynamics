@@ -1,5 +1,6 @@
 from edge_simulation import *
 from helper_functions import *
+from control_functions import *
 import csv
 
 
@@ -17,26 +18,44 @@ class RunExperiments:
         """Run many experiments!"""
         # To explore passive dynamics
         ps_for_graphs = [0.01, 0.05, 0.1]
-        with open('mean_belief_urns.csv', 'wb') as csvfile:
-            results_writer = csv.writer(csvfile, delimiter=',')
-            for p in ps_for_graphs:
-                graph = GraphType(self.num_nodes, 'erdos', p=p)
-                control = "passive"
-                # Show the time-course of one run -- useful to check if we have
-                # settled down
-                # stats = self.run_once(graph, control)
-                # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
+        with open('mean_belief_urns.csv', 'wb') as mean_csvfile:
+            with open('std_belief_urns.csv', 'wb') as std_csvfile:
+                mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
+                std_results_writer = csv.writer(std_csvfile, delimiter=',')
+                for p in ps_for_graphs:
+                    graph = GraphType(self.num_nodes, 'erdos', p=p)
+                    # Show the time-course of one run -- useful to check if we have
+                    # settled down
+                    # stats = self.run_once(graph, control=None)
+                    # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
 
-                mean_urns, std_urns = \
-                    self.run_one_setup_many_runs(graph, control, p)
+                    self.run_one_setup_many_runs(graph, p,
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=None)
 
-                results_writer.writerow(mean_urns)
+                    self.run_one_setup_many_runs(graph, p,
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=broadcast_control)
 
-                # self.plot_hist(end_prop_distributions["mean_belief_urn"],
-                #                "mean urn end belief")
+                    self.run_one_setup_many_runs(graph, p,
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=random_control)
 
+                    self.run_one_setup_many_runs(graph, p,
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=hub_control)
 
-    def run_one_setup_many_runs(self, graph, control, p):
+                    self.run_one_setup_many_runs(graph, p,
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=tom_control)
+
+    def run_one_setup_many_runs(self, graph, p, mean_results_writer,
+                                std_results_writer, control):
         """Run one setup many times"""
         end_props = []
         for num in range(0, self.num_runs):
@@ -45,10 +64,19 @@ class RunExperiments:
             end_props.append(end_prop)
         end_prop_distributions = self.collate_end_props(end_props)
 
-        mean_urns = [p, control] + end_prop_distributions["mean_belief_urn"]
-        std_urns = [p, control] + end_prop_distributions["std_belief_urns"]
+        if control is None:
+            control_str = "passive"
+        else:
+            control_str = control.__name__
 
-        return mean_urns, std_urns
+        mean_urns = [p, control_str] + end_prop_distributions["mean_belief_urn"]
+        std_urns = [p, control_str] + end_prop_distributions["std_belief_urns"]
+
+        mean_results_writer.writerow(mean_urns)
+        std_results_writer.writerow(std_urns)
+
+        # self.plot_hist(end_prop_distributions["mean_belief_urn"],
+                    #                "mean urn end belief")
 
     def return_end_points(self, running_stats):
         """Calculate statistics at end point"""
@@ -85,7 +113,7 @@ class RunExperiments:
         balls = np.ones((self.num_nodes, 2))
 
         # Run the simulation
-        steps = simulate(graph, balls, self.num_steps)
+        steps = simulate(graph, balls, self.num_steps, control=control)
         stats = self.collect_stats(balls, steps)
 
         return stats
