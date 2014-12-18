@@ -158,27 +158,19 @@ class RunExperiments:
         plt.show()
 
 if __name__ == '__main__':
-    num_nodes = 100
-    num_steps = 10000
-    num_runs = 50
-    
-    # define graphs
-    graph_ER_01 = GraphType(num_nodes, 'erdos', p=0.01)
-    graph_ER_05 = GraphType(num_nodes, 'erdos', p=0.05)
-    graph_ER_1 = GraphType(num_nodes, 'erdos', p=0.1)
-    graph_BA_1 = GraphType(num_nodes, 'powerlaw', m=1, p=0)
-    graph_BA_3 = GraphType(num_nodes, 'powerlaw', m=3, p=0)
-    graph_BA_5 = GraphType(num_nodes, 'powerlaw', m=5, p=0)
-    graphs = [graph_ER_01, graph_ER_05, graph_ER_1,
-              graph_BA_1, graph_BA_3, graph_BA_5]
+    # open config text file, contains num_nodes, num_steps, num_runs and graph definitions
+    config = open('experiment_config.txt', 'r')
+    experiment = config.read()
+    exec(experiment)
     
     # auto-construct the graph and graph_name lists
     graphs = []
-    graph_names = []
-    for i in locals():
+    graph_names = []  
+    ns = locals()      
+    for i in ns:
         if (type(locals()[i]) == type(nx.Graph())) or (type(locals()[i]) == type(nx.DiGraph())):
             graphs.append(locals()[i])
-            graph_names.append(i)
+            graph_names.append(i) 
                
     experiment_setup = \
         RunExperiments(num_steps, num_runs, graphs, graph_names,
