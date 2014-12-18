@@ -62,3 +62,6 @@ cedge_simulation.html
 
 # CSV files
 *.csv
+
+# Config files
+experiment_config.txt
