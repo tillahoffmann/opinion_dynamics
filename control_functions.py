@@ -28,4 +28,36 @@ def hub_control(graph, balls, step, control_interval=10, control_fraction=0.1):
 		controls.append((top_hubs[hub], 1, -balls[top_hubs[hub], 1]))
 
     return controls
+
+
+
+def tom_control(graph, balls, step, control_interval=10, control_fraction=0.1):
+
+
+	influence = [0]*graph.number_of_nodes
+
+	for node in graph.number_of_nodes():
+		neighbors_array = graph.neighbors(node)
+
+		for neighbors in neighbors_array:
+			if balls(neighbors, 0) < balls(neighbors, 1)
+				influence[node] + = 1
+
+
+   	num_influence = int(num_nodes*control_fraction)
+    	top_influence_nodes = influence.argsort()[-num_influence:][::-1]
 	
+	
+	
+    if step % control_interval==0:
+	for i in range(num_influence):
+		# Add balls of colour 0
+		controls.append((top_influence_nodes[i], 0, balls[top_influence_nodes[i], amount]))
+
+    return controls
+
+
+
+	
+
+
