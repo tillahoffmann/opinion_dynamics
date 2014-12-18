@@ -60,7 +60,7 @@ def random_control(graph, balls, step, control_interval=100, control_fraction=0.
     return controls
 
 
-def tom_control(graph, balls, step, control_interval=10, control_fraction=0.1, control_balls=50):
+def tom_control(graph, balls, step, control_interval=100, control_fraction=0.1, control_balls=10):
     """
         Exercises control by periodically targeting a certain fraction of the nodes at random and sending them a fixed number of balls of colour 0.
         :param graph: The graph on which dynamics are being simulated.
