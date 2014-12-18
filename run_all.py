@@ -7,60 +7,60 @@ import csv
 class RunExperiments:
     """Class to run experiments from"""
 
-    def __init__(self, num_steps, num_runs):
+    def __init__(self, num_steps, num_runs, graphs, graph_names,
+                 std_file_name, mean_file_name):
         """Initialize the class"""
         # Define a number of nodes and simulation steps
-        self.num_nodes = 100
         self.num_steps = num_steps
         self.num_runs = num_runs
+        self.graphs = graphs
+        self.graph_names = graph_names
+        self.std_file_name = std_file_name
+        self.mean_file_name = mean_file_name
 
     def run_many(self):
         """Run many experiments!"""
         # To explore passive dynamics
-        graph_ER_01 = GraphType(self.num_nodes, 'erdos', p=0.01)
-        graph_ER_1 = GraphType(self.num_nodes, 'erdos', p=0.1)
-        graph_ER_5 = GraphType(self.num_nodes, 'erdos', p=0.5)
-        
+        """
         # auto-construct list of graph names from previously defined graphs
         # assumes local namespace contains only self, graph_names and graphs
         graph_names = []
         for i in locals():
             if (i != 'self') and (i != 'graph_names'):
                 graph_names.append(i)
+        """
 
-        with open('mean_belief_urns.csv', 'wb') as mean_csvfile:
-            with open('std_belief_urns.csv', 'wb') as std_csvfile:
+        with open(self.mean_file_name, 'wb') as mean_csvfile:
+            with open(self.std_file_name, 'wb') as std_csvfile:
                 mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
-                std_results_writer = csv.writer(std_csvfile, delimiter=',')               
-                for graph_name in graph_names:
-                    # ask the local namespace for the graph object with this name
-                    graph = locals()[graph_name] 
+                std_results_writer = csv.writer(std_csvfile, delimiter=',')
+                for idx, graph in enumerate(self.graphs):
                     # Show the time-course of one run -- useful to check if we have
                     # settled down
                     # stats = self.run_once(graph, control=None)
                     # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
 
-                    self.run_one_setup_many_runs(graph, graph_name,
+                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=None)
 
-                    self.run_one_setup_many_runs(graph, graph_name,
+                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=broadcast_control)
 
-                    self.run_one_setup_many_runs(graph, graph_name,
+                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=random_control)
 
-                    self.run_one_setup_many_runs(graph, graph_name,
+                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=hub_control)
 
-                    self.run_one_setup_many_runs(graph, graph_name,
+                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=tom_control)
@@ -86,8 +86,7 @@ class RunExperiments:
         mean_results_writer.writerow(mean_urns)
         std_results_writer.writerow(std_urns)
 
-        # self.plot_hist(end_prop_distributions["mean_belief_urn"],
-                    #                "mean urn end belief")
+        # self.plot_hist(end_prop_distributions["mean_belief_urn"], "mean urn end belief")
 
     def return_end_points(self, running_stats):
         """Calculate statistics at end point"""
@@ -121,7 +120,7 @@ class RunExperiments:
         graph = remove_isolates(graph)
 
         # Initialize the nodes
-        balls = np.ones((self.num_nodes, 2))
+        balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
         steps = simulate(graph, balls, self.num_steps, control=control)
@@ -152,7 +151,7 @@ class RunExperiments:
         plt.plot(property)
         plt.xlabel('Step number')
         plt.ylabel(ylabel)
-        #plt.tight_layout()
+        plt.tight_layout()
         plt.show()
 
     def plot_hist(self, property, xlabel):
@@ -161,10 +160,28 @@ class RunExperiments:
         plt.figure()
         plt.hist(property)
         plt.xlabel(xlabel)
-        #plt.tight_layout()
+        plt.tight_layout()
         plt.show()
 
 if __name__ == '__main__':
-    # Initialize with num timesteps, num runs
-     experiment_setup = RunExperiments(1000, 5)
-     experiment_setup.run_many()
+    num_nodes = 100
+    num_steps = 1000
+    num_runs = 5
+    
+    # define graphs
+    graph_ER_01 = GraphType(num_nodes, 'erdos', p=0.01)
+    graph_ER_1 = GraphType(num_nodes, 'erdos', p=0.1)
+    graph_BA_3 = GraphType(num_nodes, 'powerlaw', m=3, p=0)
+    
+    # auto-construct the graph and graph_name lists
+    graphs = []
+    graph_names = []
+    for i in locals():
+        if (type(locals()[i]) == type(nx.Graph())) or (type(locals()[i]) == type(nx.DiGraph())):
+            graphs.append(locals()[i])
+            graph_names.append(i)
+               
+    experiment_setup = \
+        RunExperiments(num_steps, num_runs, graphs, graph_names,
+                       "std_belief_urns.csv", "mean_belief_urns.csv")
+    experiment_setup.run_many()

@@ -25,7 +25,7 @@ def remove_isolates(graph, inplace=False, relabel=True):
     return graph
 
 
-def GraphType(num_nodes, str, p=0.05):
+def GraphType(num_nodes, str, p=0.05, m=3):
     """
     :param num_nodes: the number of nodes of the graph (if that option is available)
     :param str: the type of graph that is used. We have
@@ -40,7 +40,7 @@ def GraphType(num_nodes, str, p=0.05):
     if str == 'erdos':
         graph = nx.erdos_renyi_graph(num_nodes, p)
     elif str == 'powerlaw':
-        graph = nx.powerlaw_cluster_graph(num_nodes, 3,5 / float(num_nodes))
+        graph = nx.powerlaw_cluster_graph(num_nodes, m, p)
     elif str == 'enron':
         graph = nx.Graph()
         edges = np.loadtxt('Enron.txt',skiprows=4)
