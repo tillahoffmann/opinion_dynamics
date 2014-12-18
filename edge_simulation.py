@@ -3,7 +3,7 @@ __author__ = 'tillhoffmann'
 import numpy as np
 import networkx as nx
 
-def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
+def simulate(graph, initial_balls, num_steps, output='steps', control=None, **kwargs):
     """
     Generates a step sequence `S[t, :]` of prior updates. Each row of `S` represents one time step. At time `t`, node
     `S[t,0]` transfers a ball of color `S[t,2]` to node `S[t,1]`.
@@ -21,6 +21,7 @@ def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
 
     steps = []
 
+    # Iterate while the number of steps is smaller or the stopping criterion is satisfied
     for step in range(num_steps):
         #Apply a control strategy if supplied
         if control is not None:
@@ -42,7 +43,12 @@ def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
         # Add to the steps
         steps.append((u, v, ball_u, 1))
 
-    return np.array(steps)
+    if output=='steps':
+        return np.array(steps, dtype=np.float)
+    elif output=='last':
+        return balls
+    else:
+        raise ValueError("'{}' is an invalid output option.".format(output))
 
 
 def evaluate_statistic(initial_balls, steps, statistic):
