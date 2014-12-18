@@ -42,22 +42,22 @@ class RunExperiments:
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=broadcast_control(burn_in=self.burn_in))
+                                                 control=broadcast_control)
 
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=random_control(burn_in=self.burn_in))
+                                                 control=random_control)
 
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=hub_control(burn_in=self.burn_in))
+                                                 control=hub_control)
 
                     self.run_one_setup_many_runs(graph, self.graph_names[idx],
                                                  mean_results_writer,
                                                  std_results_writer,
-                                                 control=tom_control(burn_in=self.burn_in))
+                                                 control=tom_control)
 
     def run_one_setup_many_runs(self, graph, graph_name, mean_results_writer,
                                 std_results_writer, control):
@@ -118,7 +118,7 @@ class RunExperiments:
         balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
-        steps = simulate(graph, balls, self.num_steps, control=control)
+        steps = simulate(graph, balls, self.num_steps, control=control, burn_in=self.burn_in)
         stats = self.collect_stats(balls, steps)
 
         return stats
