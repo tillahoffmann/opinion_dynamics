@@ -18,7 +18,7 @@ def hub_control(graph, balls, step, burn_in=5000, control_interval=100, control_
     controls = []	
  
     # Check if anything is to be done at this step
-    if step > burn_in and step % control_interval == 0:
+    if step >= burn_in and step % control_interval == 0:
 
     	num_nodes = graph.number_of_nodes()
     	degree = np.asarray(graph.out_degree().values())
@@ -50,7 +50,7 @@ def random_control(graph, balls, step, burn_in=5000, control_interval=100, contr
     controls = []	
 
     # Check if anything is to be done at this step
-    if step > burn_in and step % control_interval == 0:
+    if step >= burn_in and step % control_interval == 0:
 
 	num_nodes = graph.number_of_nodes()
     	num_targets = int(num_nodes*control_fraction)
@@ -77,7 +77,7 @@ def tom_control(graph, balls, step, burn_in=5000, control_interval=100, control_
     # Array to store control changes
     controls = []
 
-    if step > burn_in and step % control_interval == 0:
+    if step >= burn_in and step % control_interval == 0:
 	influence = np.asarray([0] * graph.number_of_nodes())
     	for node in graph.nodes():
         	neighbors_array = graph.neighbors(node)
@@ -112,7 +112,7 @@ def broadcast_control(graph, balls, step, burn_in=5000,  control_interval=100, c
     controls = []	
 
     # Check if anything is to be done at this step
-    if step > burn_in and step % control_interval == 0: 
+    if step >= burn_in and step % control_interval == 0: 
 
 	num_nodes = graph.number_of_nodes()
     

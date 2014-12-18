@@ -16,7 +16,7 @@ def _main():
     num_nodes = 100
 
     # Define a number of simulations to be run
-    num_sim = 100
+    num_sim = 10
 
     # Define variables to store final mean beliefs over all simulations
     urn_avg = []
@@ -30,7 +30,7 @@ def _main():
        	graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
        	graph = graph.to_directed()
 
-        steps = simulate(graph, balls, num_steps)
+        steps = simulate(graph, balls, num_steps, control=hub_control)
 
 
     	# Evaluate the mean belief urn-weighted
