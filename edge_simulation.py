@@ -76,6 +76,17 @@ def statistic_mean_belief_urn_weighted(balls):
     belief = balls[:, 0] / np.sum(balls, axis=1)
     return np.mean(belief)
 
+def statistic_std_belief_urn_weighted(balls):
+    """
+    Computes the std of urn-weighted belief.
+    :param balls: A 2D-array representing a ball configuration. The element `initial_balls[i,c]` represents
+    the number of balls of color `c` that node `i` holds.
+    :return: The mean urn-weighted belief.
+    """
+    # Compute the mean belief of each urn
+    belief = balls[:, 0] / np.sum(balls, axis=1)
+    return np.std(belief)
+
 
 def statistic_mean_belief_ball_weighted(balls):
     """
