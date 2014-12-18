@@ -8,4 +8,4 @@ burn_out = 20000
 graph_ER_01 = GraphType(num_nodes, 'erdos', p=0.01)
 graph_ER_05 = GraphType(num_nodes, 'erdos', p=0.05)
 graph_ER_1 = GraphType(num_nodes, 'erdos', p=0.1)
-
+graph_config_1 = GraphType(num_nodes, 'config')
