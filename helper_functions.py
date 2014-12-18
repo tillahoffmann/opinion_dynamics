@@ -57,6 +57,16 @@ def GraphType(num_nodes, str, p=0.05, m=3):
         graph = nx.star_graph(num_nodes)
     elif str == 'cycle':
         graph = nx.cycle_graph(num_nodes)
-        
+    elif str == 'config':
+        max_degree = int(num_nodes/5)
+        #Create some degrees
+        degrees = np.asarray(np.round(np.exp(np.log(max_degree) * np.random.uniform(size=num_nodes))), np.int)
+        #Ensure the total number of degrees is even
+        if sum(degrees) % 2 != 0:
+            degrees[np.random.randint(num_nodes)] += 2 * np.random.randint(2) - 1
+        #Create a graph and apply the configuration model
+        graph = nx.Graph()
+        graph = nx.configuration_model(degrees, graph)
+        graph = graph.to_directed()
 
     return graph

@@ -157,23 +157,31 @@ class RunExperiments:
         plt.xlabel(xlabel)
         plt.tight_layout()
         plt.show()
+        
+
 
 if __name__ == '__main__':
-    # open config text file, contains num_nodes, num_steps, num_runs and graph definitions
-    config = open('experiment_config.txt', 'r')
-    experiment = config.read()
-    exec(experiment)
+    def run():
+        # open config text file, contains num_nodes, num_steps, num_runs and graph definitions
+        config = open('experiment_config.txt', 'r')
+        experiment = config.read()
+        exec(experiment)
+    
+        # auto-construct the graph and graph_name lists
+        graphs = []
+        graph_names = []
+        i = ""
+        for i in locals():
+            if (type(locals()[i]) == type(nx.Graph())) or (type(locals()[i]) == type(nx.DiGraph())):
+                graphs.append(locals()[i])
+                graph_names.append(i) 
+                
+        print graph_names
+    
+        experiment_setup = \
+            RunExperiments(num_steps, burn_in, num_runs, graphs, graph_names,
+                           "std_belief_urns.csv", "mean_belief_urns.csv")
+        experiment_setup.run_many()    
+    
+    run() # needs to be wrapped inside a function to prevent namespace issues in IDEs
 
-    # auto-construct the graph and graph_name lists
-    graphs = []
-    graph_names = []  
-    ns = locals()      
-    for i in ns:
-        if (type(locals()[i]) == type(nx.Graph())) or (type(locals()[i]) == type(nx.DiGraph())):
-            graphs.append(locals()[i])
-            graph_names.append(i) 
-
-    experiment_setup = \
-        RunExperiments(num_steps, burn_in, num_runs, graphs, graph_names,
-                       "std_belief_urns.csv", "mean_belief_urns.csv")
-    experiment_setup.run_many()
