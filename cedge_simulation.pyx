@@ -166,14 +166,16 @@ def simulate(graph, np.ndarray[np.float_t, ndim=2] initial_balls, int num_steps,
         #Apply a control strategy if supplied
         if control is not None:
             #Get the controls
-            controls = np.asarray(control(graph, balls, step, **kwargs), np.float)
-            #Apply the controls
-            for idx in range(controls.shape[0]):
-                node = int(controls[idx, 0])
-                ball = int(controls[idx, 1])
-                number = controls[idx, 2]
-                balls[node, ball] += number
-                steps.append((None, node, ball, number))
+            _controls = control(graph, balls, step, **kwargs)
+            if len(_controls) > 0:
+                controls = np.asarray(_controls, np.float)
+                #Apply the controls
+                for idx in range(controls.shape[0]):
+                    node = int(controls[idx, 0])
+                    ball = int(controls[idx, 1])
+                    number = controls[idx, 2]
+                    balls[node, ball] += number
+                    steps.append((None, node, ball, number))
 
         # Select an edge
         idx = rand() % num_edges
