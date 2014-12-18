@@ -7,20 +7,22 @@ import csv
 class RunExperiments:
     """Class to run experiments from"""
 
-    def __init__(self, num_steps, num_runs, num_nodes, graphs, graph_names):
+    def __init__(self, num_steps, num_runs, graphs, graph_names,
+                 std_file_name, mean_file_name):
         """Initialize the class"""
         # Define a number of nodes and simulation steps
         self.num_steps = num_steps
         self.num_runs = num_runs
-        self.num_nodes = num_nodes
         self.graphs = graphs
         self.graph_names = graph_names
+        self.std_file_name = std_file_name
+        self.mean_file_name = mean_file_name
 
     def run_many(self):
         """Run many experiments!"""
         # To explore passive dynamics
-        with open('mean_belief_urns.csv', 'wb') as mean_csvfile:
-            with open('std_belief_urns.csv', 'wb') as std_csvfile:
+        with open(self.mean_file_name, 'wb') as mean_csvfile:
+            with open(self.std_file_name, 'wb') as std_csvfile:
                 mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
                 std_results_writer = csv.writer(std_csvfile, delimiter=',')
                 for idx, graph in enumerate(self.graphs):
@@ -110,7 +112,7 @@ class RunExperiments:
         graph = remove_isolates(graph)
 
         # Initialize the nodes
-        balls = np.ones((self.num_nodes, 2))
+        balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
         steps = simulate(graph, balls, self.num_steps, control=control)
@@ -154,14 +156,15 @@ class RunExperiments:
         plt.show()
 
 if __name__ == '__main__':
-    # Initialize with num timesteps, num runs
     num_nodes = 100
     num_steps = 1000
     num_runs = 5
     graph_ER_01 = GraphType(num_nodes, 'erdos', p=0.01)
     graph_ER_1 = GraphType(num_nodes, 'erdos', p=0.1)
-    graphs = [graph_ER_01, graph_ER_1]
-    graph_names = ["graph_ER_01", "graph_ER_1"]
+    graph_BA_3 = GraphType(num_nodes, 'powerlaw', m=3, p=0)
+    graphs = [graph_ER_01, graph_ER_1, graph_BA_3]
+    graph_names = ["graph_ER_01", "graph_ER_1", "graph_BA_3"]
     experiment_setup = \
-        RunExperiments(num_steps, num_runs, num_nodes, graphs, graph_names)
+        RunExperiments(num_steps, num_runs, graphs, graph_names,
+                       "std_belief_urns.csv", "mean_belief_urns.csv")
     experiment_setup.run_many()
