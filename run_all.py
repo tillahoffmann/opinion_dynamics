@@ -12,12 +12,13 @@ except:
 class RunExperiments:
     """Class to run experiments from"""
 
-    def __init__(self, num_steps, burn_in, num_runs, graphs, graph_names,
+    def __init__(self, num_steps, burn_in, burn_out, num_runs, graphs, graph_names,
                  std_file_name, mean_file_name):
         """Initialize the class"""
         # Define a number of nodes and simulation steps
         self.num_steps = num_steps
         self.burn_in = burn_in
+        self.burn_out = burn_out
         self.num_runs = num_runs
         self.graphs = graphs
         self.graph_names = graph_names
@@ -152,7 +153,7 @@ class RunExperiments:
         balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
-        balls = simulate(graph, balls, self.num_steps, 'last', control=control, burn_in=self.burn_in)
+        balls = simulate(graph, balls, self.num_steps, 'last', control=control, burn_in=self.burn_in, burn_out=self.burn_out)
         stats = self.collect_stats_quick(balls)
 
         return stats
@@ -222,7 +223,7 @@ if __name__ == '__main__':
         print graph_names
     
         experiment_setup = \
-            RunExperiments(num_steps, burn_in, num_runs, graphs, graph_names,
+            RunExperiments(num_steps, burn_in, burn_out, num_runs, graphs, graph_names,
                            "std_belief_urns.csv", "mean_belief_urns.csv")
         experiment_setup.run_many()    
     
