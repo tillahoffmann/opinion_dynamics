@@ -49,5 +49,14 @@ def GraphType(num_nodes, str, p=0.05):
         graph = nx.karate_club_graph()
     elif str == 'women':
         graph = nx.davis_southern_women_graph()
+    elif str == 'pair':
+        graph = nx.DiGraph()
+        graph.add_edge(0,1)
+        graph.add_edge(1,0)
+    elif str == 'star':
+        graph = nx.star_graph(num_nodes)
+    elif str == 'cycle':
+        graph = nx.cycle_graph(num_nodes)
+        
 
     return graph
