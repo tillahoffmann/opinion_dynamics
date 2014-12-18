@@ -2,7 +2,6 @@ __author__ = 'tillhoffmann'
 
 import numpy as np
 import networkx as nx
-from control_functions import *
 
 def simulate(graph, initial_balls, num_steps, control=None, **kwargs):
     """
@@ -68,7 +67,7 @@ def evaluate_statistic(initial_balls, steps, statistic):
 def statistic_mean_belief_urn_weighted(balls):
     """
     Computes the mean urn-weighted belief.
-    :param balls: A 2D-array representing a ball configuration. The element `initial_balls[i,c]` represents
+    :param balls: A 2D-array representing a ball configuration. The element `balls[i,c]` represents
     the number of balls of color `c` that node `i` holds.
     :return: The mean urn-weighted belief.
     """
@@ -91,7 +90,7 @@ def statistic_std_belief_urn_weighted(balls):
 def statistic_mean_belief_ball_weighted(balls):
     """
     Computes the fraction of balls of color `0`.
-    :param balls: A 2D-array representing a ball configuration. The element `initial_balls[i,c]` represents
+    :param balls: A 2D-array representing a ball configuration. The element `balls[i,c]` represents
     the number of balls of color `c` that node `i` holds.
     :return: The fraction of balls of color `0`.
     """
@@ -104,12 +103,12 @@ def _main():
     import matplotlib.pyplot as plt
     from scipy import stats
     # Fix a seed for reproducibility
-    seed = None
+    seed = 42
     if seed is not None:
         np.random.seed(seed)
 
     graph = 'pair'
-    vis = 'steady'
+    vis = 'trajectory'
     num_steps = 5000
     num_nodes = 100
     num_runs = 100
@@ -118,21 +117,20 @@ def _main():
         # Define a number of nodes and simulation steps
         num_nodes = 100
 
-        # Set up the initial ball configuration
-        balls = np.ones((num_nodes, 2))
         # Set up a network
         graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
         graph = graph.to_directed()
-
     elif graph == 'pair':
+        # Create a pair graph
         graph = nx.DiGraph()
         graph.add_edges_from([(0, 1), (1, 0)])
         num_nodes=2
 
+    # Initialise
     balls = np.ones((num_nodes, 2))
 
 
-    if vis == 'mean_belief':
+    if vis == 'trajectory':
         # Simulate one trajectory
         steps = simulate(graph, balls, num_steps)
         # Evaluate the mean belief urn-weighted
