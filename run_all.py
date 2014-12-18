@@ -58,6 +58,10 @@ class RunExperiments:
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=tom_control)
+                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=degree_control)
 
     def run_one_setup_many_runs(self, graph, graph_name, mean_results_writer,
                                 std_results_writer, control):
