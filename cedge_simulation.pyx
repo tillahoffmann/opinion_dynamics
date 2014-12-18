@@ -68,6 +68,34 @@ def statistic_mean_belief_ball_weighted(balls):
     # Compute the fraction of balls of a given colour
     return cstatistic_mean_belief_ball_weighted(balls)
 
+@cython.boundscheck(False)
+@cython.cdivision(True)
+cdef float cstatistic_std_belief_urn_weighted(np.ndarray[np.float_t, ndim=2] balls):
+    """
+    See `statistic_std_belief_urn_weighted`.
+    """
+    cdef float mean_belief = cstatistic_mean_belief_urn_weighted(balls)
+    cdef float residuals = 0, belief
+    cdef int node, num_nodes = balls.shape[0]
+
+    for node in range(num_nodes):
+        belief = balls[node, 0] / float(balls[node, 0] + balls[node, 1])
+        residuals += (belief - mean_belief) * (belief - mean_belief)
+
+    return residuals / num_nodes
+
+def statistic_std_belief_urn_weighted(balls):
+    """
+    Computes the std of urn-weighted belief.
+    :param balls: A 2D-array representing a ball configuration. The element `initial_balls[i,c]` represents
+    the number of balls of color `c` that node `i` holds.
+    :return: The mean urn-weighted belief.
+    """
+    # Compute the mean belief of each urn
+    #belief = balls[:, 0] / np.sum(balls, axis=1)
+    #return np.std(belief)
+    return cstatistic_std_belief_urn_weighted(balls)
+
 
 @cython.boundscheck(False)
 def evaluate_statistic(np.ndarray[np.float_t, ndim=2] initial_balls, np.ndarray[np.float_t, ndim=2] steps, statistic):
