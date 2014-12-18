@@ -19,40 +19,48 @@ class RunExperiments:
         # To explore passive dynamics
         graph_ER_01 = GraphType(self.num_nodes, 'erdos', p=0.01)
         graph_ER_1 = GraphType(self.num_nodes, 'erdos', p=0.1)
-        graphs = [graph_ER_01, graph_ER_1]
-        graph_names = ["graph_ER_01", "graph_ER_1"]
+        graph_ER_5 = GraphType(self.num_nodes, 'erdos', p=0.5)
+        
+        # auto-construct list of graph names from previously defined graphs
+        # assumes local namespace contains only self, graph_names and graphs
+        graph_names = []
+        for i in locals():
+            if (i != 'self') and (i != 'graph_names'):
+                graph_names.append(i)
+
         with open('mean_belief_urns.csv', 'wb') as mean_csvfile:
             with open('std_belief_urns.csv', 'wb') as std_csvfile:
                 mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
-                std_results_writer = csv.writer(std_csvfile, delimiter=',')
-                for idx, graph in enumerate(graphs):
-
+                std_results_writer = csv.writer(std_csvfile, delimiter=',')               
+                for graph_name in graph_names:
+                    # ask the local namespace for the graph object with this name
+                    graph = locals()[graph_name] 
                     # Show the time-course of one run -- useful to check if we have
                     # settled down
                     # stats = self.run_once(graph, control=None)
                     # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
 
-                    self.run_one_setup_many_runs(graph, graph_names[idx],
+                    self.run_one_setup_many_runs(graph, graph_name,
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=None)
 
-                    self.run_one_setup_many_runs(graph, graph_names[idx],
+                    self.run_one_setup_many_runs(graph, graph_name,
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=broadcast_control)
 
-                    self.run_one_setup_many_runs(graph, graph_names[idx],
+                    self.run_one_setup_many_runs(graph, graph_name,
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=random_control)
 
-                    self.run_one_setup_many_runs(graph, graph_names[idx],
+                    self.run_one_setup_many_runs(graph, graph_name,
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=hub_control)
 
-                    self.run_one_setup_many_runs(graph, graph_names[idx],
+                    self.run_one_setup_many_runs(graph, graph_name,
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=tom_control)
