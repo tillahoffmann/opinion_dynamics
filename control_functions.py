@@ -27,7 +27,7 @@ def hub_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interv
     	num_hubs = int(num_nodes*control_fraction)
     	top_hubs = degree.argsort()[-num_hubs:][::-1]
 
-        balls_per_node = num_nodes*control_balls_fraction / num_hubs
+        balls_per_node = float(num_nodes*control_balls_fraction) / num_hubs
 	for hub in range(num_hubs):
             # Send some colour 0 balls to this hub
             controls.append((top_hubs[hub], 0, balls_per_node))
@@ -59,7 +59,7 @@ def degree_control(graph, balls, step, burn_in=5000, burn_out=10000, control_int
     	# Get indices of nodes to be targeted
     	num_targets = int(num_nodes*control_fraction)
 	
-        balls_per_node = num_nodes*control_balls_fraction / num_targets
+        balls_per_node = float(num_nodes*control_balls_fraction) / num_targets
 	for node in range(num_targets):
 	    # Select index of node to target	
 	    rand = randint(1,cumulative_degree[num_nodes-1])
@@ -94,7 +94,7 @@ def random_control(graph, balls, step, burn_in=5000, burn_out=10000, control_int
 	num_nodes = graph.number_of_nodes()
     	num_targets = int(num_nodes*control_fraction)
 
-        balls_per_node = num_nodes*control_balls_fraction/num_targets
+        balls_per_node = float(num_nodes*control_balls_fraction)/num_targets
         for node in range(num_targets):
             # Send some colour 0 balls to an arbitrarily chosen node
             controls.append((int(num_nodes*node/num_targets), 0, balls_per_node))
@@ -130,7 +130,7 @@ def tom_control(graph, balls, step, burn_in=5000, burn_out=10000, control_interv
     	num_influence = int(num_nodes * control_fraction)
     	top_influence_nodes = influence.argsort()[-num_influence:][::-1]
 
-        balls_per_node = num_nodes*control_balls_fraction / num_influence
+        balls_per_node = float(num_nodes*control_balls_fraction) / num_influence
 
         for i in range(num_influence):
             # Add balls of colour 0
@@ -158,7 +158,7 @@ def broadcast_control(graph, balls, step, burn_in=5000, burn_out=10000, control_
 
 	num_nodes = graph.number_of_nodes()
     
-        balls_per_node = num_nodes*control_balls_fraction / num_nodes
+        balls_per_node = float(num_nodes*control_balls_fraction) / num_nodes
 
         for node in range(num_nodes):
             # Send some colour 0 balls to this node
