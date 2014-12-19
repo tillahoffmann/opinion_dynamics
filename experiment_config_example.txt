@@ -1,6 +1,6 @@
 num_nodes = 100
 num_steps = 20000
-num_runs = 2
+num_runs = 100
 burn_in = 0
 burn_out = 10000
 graph_types = [{"type": "erdos", "p": 0.05}, {"type": "config", "p": None}]

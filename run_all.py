@@ -159,7 +159,7 @@ class RunExperiments:
         balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
-        balls = simulate(graph, balls, self.num_steps, 'last', control=control, burn_in=self.burn_in, burn_out=self.burn_out)
+        balls = simulate(graph, balls, self.num_steps, 'last', control=control, burn_in=self.burn_in, burn_out=self.burn_out, control_interval=self.num_nodes*10)
         stats = self.collect_stats_quick(balls)
 
         return stats
