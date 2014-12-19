@@ -1,6 +1,7 @@
 from helper_functions import *
 from control_functions import *
 import csv
+import sys
 
 #from edge_simulation import *
 try:
@@ -34,7 +35,6 @@ class RunExperiments:
                 mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
                 std_results_writer = csv.writer(std_csvfile, delimiter=',')
                 for graph_type in self.graph_types:
-                    print("{}{}".format(graph_type["type"], graph_type["p"]))
                     # Show the time-course of one run -- useful to check if we have
                     # settled down
                     # stats = self.run_once(graph, control=None)
@@ -208,18 +208,19 @@ class RunExperiments:
         plt.show()
         
 
-
 if __name__ == '__main__':
-    def run():
+    # take arguments in order: config file, output file 1, output file 2
+
+    def run(config, out1, out2):
         # open config text file, contains num_nodes, num_steps, num_runs and graph definitions
-        config = open('experiment_config.txt', 'r')
+        config = open(config, 'r')
         experiment = config.read()
         exec(experiment)
     
         experiment_setup = \
             RunExperiments(num_steps, burn_in, burn_out, num_runs, num_nodes, graph_types,
-                           "std_belief_urns.csv", "mean_belief_urns.csv")
+                           out1, out2)
         experiment_setup.run_many()    
     
-    run() # needs to be wrapped inside a function to prevent namespace issues in IDEs
+    run(sys.argv[1], sys.argv[2], sys.argv[3]) # needs to be wrapped inside a function to prevent namespace issues in IDEs
 
