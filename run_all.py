@@ -12,7 +12,7 @@ except:
 class RunExperiments:
     """Class to run experiments from"""
 
-    def __init__(self, num_steps, burn_in, burn_out, num_runs, graphs, graph_names,
+    def __init__(self, num_steps, burn_in, burn_out, num_runs, num_nodes, graph_types,
                  std_file_name, mean_file_name):
         """Initialize the class"""
         # Define a number of nodes and simulation steps
@@ -20,8 +20,8 @@ class RunExperiments:
         self.burn_in = burn_in
         self.burn_out = burn_out
         self.num_runs = num_runs
-        self.graphs = graphs
-        self.graph_names = graph_names
+        self.num_nodes = num_nodes
+        self.graph_types = graph_types
         self.std_file_name = std_file_name
         self.mean_file_name = mean_file_name
 
@@ -33,43 +33,43 @@ class RunExperiments:
             with open(self.std_file_name, 'wb') as std_csvfile:
                 mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
                 std_results_writer = csv.writer(std_csvfile, delimiter=',')
-                for idx, graph in enumerate(self.graphs):
-                    print(self.graph_names[idx])
+                for graph_type in self.graph_types:
+                    print("{}{}".format(graph_type["type"], graph_type["p"]))
                     # Show the time-course of one run -- useful to check if we have
                     # settled down
                     # stats = self.run_once(graph, control=None)
                     # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
 
-                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=None)
 
-                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=broadcast_control)
 
-                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=random_control)
 
-                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=hub_control)
 
-                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=tom_control)
-                    self.run_one_setup_many_runs(graph, self.graph_names[idx],
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=degree_control)
 
-    def run_one_setup_many_runs(self, graph, graph_name, mean_results_writer,
+    def run_one_setup_many_runs(self, graph_type, graph_p, mean_results_writer,
                                 std_results_writer, control):
         """Run one setup many times"""
         end_props = []
@@ -82,6 +82,7 @@ class RunExperiments:
             print (datetime.now() - dt).total_seconds()
             dt = datetime.now()
             """
+            graph = GraphType(self.num_nodes, graph_type, p=graph_p)
             end_prop = self.run_once_quick(graph, control)
             end_props.append(end_prop)
             #print (datetime.now() - dt).total_seconds()
@@ -92,6 +93,10 @@ class RunExperiments:
         else:
             control_str = control.__name__
 
+        if graph_p is not None:
+            graph_name = "{}{}".format(graph_type, graph_p)
+        else:
+            graph_name = graph_type
         mean_urns = [graph_name, control_str] + end_prop_distributions["mean_belief_urn"]
         std_urns = [graph_name, control_str] + end_prop_distributions["std_belief_urns"]
 
@@ -211,19 +216,8 @@ if __name__ == '__main__':
         experiment = config.read()
         exec(experiment)
     
-        # auto-construct the graph and graph_name lists
-        graphs = []
-        graph_names = []
-        i = ""
-        for i in locals():
-            if (type(locals()[i]) == type(nx.Graph())) or (type(locals()[i]) == type(nx.DiGraph())):
-                graphs.append(locals()[i])
-                graph_names.append(i) 
-                
-        print graph_names
-    
         experiment_setup = \
-            RunExperiments(num_steps, burn_in, burn_out, num_runs, graphs, graph_names,
+            RunExperiments(num_steps, burn_in, burn_out, num_runs, num_nodes, graph_types,
                            "std_belief_urns.csv", "mean_belief_urns.csv")
         experiment_setup.run_many()    
     
