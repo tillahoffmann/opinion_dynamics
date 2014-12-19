@@ -6,6 +6,7 @@ import sys
 #from edge_simulation import *
 try:
     from cedge_simulation import *
+    seed_rng()
 except:
     print "Cython not available. Reverting to python."
     from edge_simulation import *
@@ -209,18 +210,18 @@ class RunExperiments:
         
 
 if __name__ == '__main__':
-    # take arguments in order: config file, output file 1, output file 2
+    # take argument: config file
 
-    def run(config, out1, out2):
+    def run(config):
         # open config text file, contains num_nodes, num_steps, num_runs and graph definitions
         config = open(config, 'r')
         experiment = config.read()
-        exec(experiment)
+        exec(experiment)      
     
         experiment_setup = \
             RunExperiments(num_steps, burn_in, burn_out, num_runs, num_nodes, graph_types,
-                           out1, out2)
+                           std_file_name, mean_file_name)
         experiment_setup.run_many()    
     
-    run(sys.argv[1], sys.argv[2], sys.argv[3]) # needs to be wrapped inside a function to prevent namespace issues in IDEs
+    run(sys.argv[1]) # needs to be wrapped inside a function to prevent namespace issues in IDEs
 

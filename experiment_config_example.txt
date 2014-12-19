@@ -4,3 +4,5 @@ num_runs = 2
 burn_in = 0
 burn_out = 10000
 graph_types = [{"type": "erdos", "p": 0.05}, {"type": "config", "p": None}]
+std_file_name = "std_belief_urns.csv"
+mean_file_name = "mean_belief_urns.csv"
