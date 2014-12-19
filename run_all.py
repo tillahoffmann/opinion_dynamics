@@ -14,65 +14,46 @@ except:
 class RunExperiments:
     """Class to run experiments from"""
 
-    def __init__(self, num_steps, burn_in, burn_out, control_interval, num_runs, num_nodes, graph_types,
-                 std_file_name, mean_file_name):
+    def __init__(self, num_steps, burn_in, burn_out, control_interval,
+                 control_balls_fraction, num_runs, num_nodes, graph_types):
         """Initialize the class"""
         # Define a number of nodes and simulation steps
         self.num_steps = num_steps
         self.burn_in = burn_in
         self.burn_out = burn_out
         self.control_interval = control_interval
+        self.control_balls_fraction = control_balls_fraction
         self.num_runs = num_runs
         self.num_nodes = num_nodes
         self.graph_types = graph_types
-        self.std_file_name = std_file_name
-        self.mean_file_name = mean_file_name
 
     def run_many(self):
         """Run many experiments!"""
-        # To explore passive dynamics
+        results = []
+        for graph_type in self.graph_types:
 
-        with open(self.mean_file_name, 'wb') as mean_csvfile:
-            with open(self.std_file_name, 'wb') as std_csvfile:
-                mean_results_writer = csv.writer(mean_csvfile, delimiter=',')
-                std_results_writer = csv.writer(std_csvfile, delimiter=',')
-                for graph_type in self.graph_types:
-                    # Show the time-course of one run -- useful to check if we have
-                    # settled down
-                    # stats = self.run_once(graph, control=None)
-                    # self.plot_once(stats["mean_belief_urn"], "mean belief of urns")
+            res1 = self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                         control=None)
 
-                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
-                                                 mean_results_writer,
-                                                 std_results_writer,
-                                                 control=None)
+            res2 = self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                         control=broadcast_control)
 
-                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
-                                                 mean_results_writer,
-                                                 std_results_writer,
-                                                 control=broadcast_control)
+            res3 = self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                         control=random_control)
 
-                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
-                                                 mean_results_writer,
-                                                 std_results_writer,
-                                                 control=random_control)
+            res4 = self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                         control=hub_control)
 
-                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
-                                                 mean_results_writer,
-                                                 std_results_writer,
-                                                 control=hub_control)
+            res5 = self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                         control=tom_control)
 
-                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
-                                                 mean_results_writer,
-                                                 std_results_writer,
-                                                 control=tom_control)
-                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
-                                                 mean_results_writer,
-                                                 std_results_writer,
-                                                 control=degree_control)
+            res6 = self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                         control=degree_control)
 
-    def run_one_setup_many_runs(self, graph_type, graph_p, mean_results_writer,
-                                std_results_writer, control):
+            results += [res1, res2, res3, res4, res5, res6]
+        return results
+
+    def run_one_setup_many_runs(self, graph_type, graph_p, control):
         """Run one setup many times"""
         end_props = []
         for num in range(0, self.num_runs):
@@ -99,15 +80,12 @@ class RunExperiments:
             graph_name = "{}{}".format(graph_type, graph_p)
         else:
             graph_name = graph_type
+
         mean_results = end_prop_distributions["mean_belief_urn"]
-        mean_urns = [graph_name, control_str] + [np.mean(mean_results)] + [np.std(mean_results)] + mean_results
         std_results = end_prop_distributions["std_belief_urns"]
-        std_urns = [graph_name, control_str] + [np.mean(std_results)] + [np.std(std_results)] + std_results
-
-        mean_results_writer.writerow(mean_urns)
-        std_results_writer.writerow(std_urns)
-
-        # self.plot_hist(end_prop_distributions["mean_belief_urn"], "mean urn end belief")
+        return [graph_name, control_str] + [np.mean(mean_results)] + \
+               [np.std(mean_results)] + [np.mean(std_results)] + \
+               [np.std(std_results)]
 
     def return_end_points(self, running_stats):
         """Calculate statistics at end point"""
@@ -145,7 +123,12 @@ class RunExperiments:
         balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
-        steps = simulate(graph, balls, self.num_steps, control=control, burn_in=self.burn_in)
+        steps = simulate(graph, balls, self.num_steps, 'steps',
+                         control=control, burn_in=self.burn_in,
+                         burn_out=self.burn_out,
+                         control_balls_fraction=self.control_balls_fraction,
+                         control_interval=self.control_interval)
+
         stats = self.collect_stats(balls, steps)
 
         return stats
@@ -162,7 +145,12 @@ class RunExperiments:
         balls = np.ones((graph.number_of_nodes(), 2))
 
         # Run the simulation
-        balls = simulate(graph, balls, self.num_steps, 'last', control=control, burn_in=self.burn_in, burn_out=self.burn_out, control_interval=self.control_interval)
+        balls = simulate(graph, balls, self.num_steps, 'last',
+                         control=control, burn_in=self.burn_in,
+                         burn_out=self.burn_out,
+                         control_balls_fraction=self.control_balls_fraction,
+                         control_interval=self.control_interval)
+
         stats = self.collect_stats_quick(balls)
 
         return stats
@@ -173,21 +161,16 @@ class RunExperiments:
         stats["mean_belief_urn"] \
             = evaluate_statistic(balls, steps,
                                  statistic_mean_belief_urn_weighted)
-        stats["mean_belief_balls"] = \
-            evaluate_statistic(balls, steps,
-                               statistic_mean_belief_ball_weighted)
         stats["std_belief_urns"] = \
             evaluate_statistic(balls, steps,
                                statistic_std_belief_urn_weighted)
 
-        #TODO: add more summary stats here
         return stats
 
     def collect_stats_quick(self, balls):
         """Collect stats for the run"""
         stats = {}
         stats["mean_belief_urn"] = statistic_mean_belief_urn_weighted(balls)
-        stats["mean_belief_balls"] = statistic_mean_belief_ball_weighted(balls)
         stats["std_belief_urns"] = statistic_std_belief_urn_weighted(balls)
 
         return stats
@@ -215,16 +198,41 @@ class RunExperiments:
 if __name__ == '__main__':
     # take argument: config file
 
-    def run(config):
-        # open config text file, contains num_nodes, num_steps, num_runs and graph definitions
-        config = open(config, 'r')
-        experiment = config.read()
-        exec(experiment)      
-    
-        experiment_setup = \
-            RunExperiments(num_steps, burn_in, burn_out, control_interval, num_runs, num_nodes, graph_types,
-                           std_file_name, mean_file_name)
-        experiment_setup.run_many()    
-    
-    run(sys.argv[1]) # needs to be wrapped inside a function to prevent namespace issues in IDEs
+    def run(input_file, output_file):
+
+        graph_types = [{"type": "erdos", "p": 0.05},
+                       {"type": "config", "p": None}]
+
+        output_header = ["graph", "control", "mean of mean belief",
+                         "std of mean belief", "mean of std of belief",
+                         "std of std of belief"]
+        with open(input_file, 'rb') as input:
+            with open(output_file, 'wb') as output:
+                input_reader = csv.reader(input, delimiter=',')
+                output_writer = csv.writer(output, delimiter=',')
+                output_writer.writerow(output_header)
+                # Skip the header
+                next(input_reader, None)
+                for line in input_reader:
+                    name = line[0]
+                    num_steps = int(line[1])
+                    burn_in = int(line[2])
+                    burn_out = int(line[3])
+                    control_interval = int(line[4])
+                    control_balls_fraction = float(line[5])
+                    num_nodes = int(line[6])
+                    num_runs = int(line[7])
+
+                    experiment_setup = \
+                        RunExperiments(num_steps, burn_in, burn_out,
+                                       control_interval,
+                                       control_balls_fraction, num_runs,
+                                       num_nodes, graph_types)
+                    results = experiment_setup.run_many()
+                    output_writer.writerow([name])
+                    for result in results:
+                        output_writer.writerow(result)
+
+    # needs to be wrapped inside a function to prevent namespace issues in IDEs
+    run(sys.argv[1], sys.argv[2])
 
