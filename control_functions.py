@@ -239,8 +239,11 @@ def young_control(graph, balls, step, burn_in=5000, burn_out=10000, control_inte
     if step >= burn_in and step < burn_out and step % control_interval == 0:
 
     	num_nodes = graph.number_of_nodes()
+        experience = []
 	for i in range(num_nodes):
-    		experience[i] = balls[i,0] + balls[i,1]
+    		experience.append((balls[i,0] + balls[i,1]))
+
+	experience = np.asarray(experience)
 
     	# Get indices of youngest nodes
     	num_targets = int(num_nodes*control_fraction)
