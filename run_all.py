@@ -61,8 +61,13 @@ class RunExperiments:
                                                 graph_type["p"],
                                                 control=influence_control)
 
-            results += [res1, res2, res3, res4, res5, res6, res7]
+            res8 = self.run_one_setup_many_runs(graph_type["type"],
+                                                graph_type["p"],
+                                                control=young_control)
+
+            results += [res1, res2, res3, res4, res5, res6, res7, res8]
         return results
+
 
     def run_one_setup_many_runs(self, graph_type, graph_p, control):
         """Run one setup many times"""

@@ -12,7 +12,7 @@ def _main():
         np.random.seed(seed)
 
     # Define a number of nodes and simulation steps
-    num_steps = 10000
+    num_steps = 20000
     num_nodes = 100
 
     # Define a number of simulations to be run
@@ -30,7 +30,7 @@ def _main():
        	graph = nx.erdos_renyi_graph(num_nodes, 5 / float(num_nodes), seed)
        	graph = graph.to_directed()
 
-        steps = simulate(graph, balls, num_steps, control=None)
+        steps = simulate(graph, balls, num_steps, control=young_control, burn_in=5000, burn_out=15000, control_interval=1000)
 
 
     	# Evaluate the mean belief urn-weighted
