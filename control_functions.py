@@ -216,9 +216,7 @@ def influence_control(graph, balls, step, burn_in=5000, burn_out=10000, control_
             controls.append((opt_node, 0, 1))
             c_balls[opt_node,0] += 1        
             num_assigned += 1
-    
-    if controls != []:
-        print controls    
+        
     return controls
 
 def control_checksum(controls):
