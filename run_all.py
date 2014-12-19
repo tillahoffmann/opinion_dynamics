@@ -98,8 +98,10 @@ class RunExperiments:
             graph_name = "{}{}".format(graph_type, graph_p)
         else:
             graph_name = graph_type
-        mean_urns = [graph_name, control_str] + end_prop_distributions["mean_belief_urn"]
-        std_urns = [graph_name, control_str] + end_prop_distributions["std_belief_urns"]
+        mean_results = end_prop_distributions["mean_belief_urn"]
+        mean_urns = [graph_name, control_str] + [np.mean(mean_results)] + [np.std(mean_results)] + mean_results
+        std_results = end_prop_distributions["std_belief_urns"]
+        std_urns = [graph_name, control_str] + [np.mean(std_results)] + [np.std(std_results)] + std_results
 
         mean_results_writer.writerow(mean_urns)
         std_results_writer.writerow(std_urns)
