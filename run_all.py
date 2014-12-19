@@ -66,10 +66,22 @@ class RunExperiments:
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=tom_control)
+                                                 
                     self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
                                                  mean_results_writer,
                                                  std_results_writer,
                                                  control=degree_control)
+                                                 
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=influence_control)
+
+
+                    self.run_one_setup_many_runs(graph_type["type"], graph_type["p"],
+                                                 mean_results_writer,
+                                                 std_results_writer,
+                                                 control=young_control)
 
     def run_one_setup_many_runs(self, graph_type, graph_p, mean_results_writer,
                                 std_results_writer, control):
